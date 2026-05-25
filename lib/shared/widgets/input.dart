@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/constants/app_theme.dart';
 
 class CustomInput extends StatelessWidget {
@@ -12,6 +13,7 @@ class CustomInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool readOnly;
   final VoidCallback? onTap;
+  final List<TextInputFormatter>? inputFormatters;
 
   const CustomInput({
     super.key,
@@ -25,6 +27,7 @@ class CustomInput extends StatelessWidget {
     this.validator,
     this.readOnly = false,
     this.onTap,
+    this.inputFormatters,
   });
 
   @override
@@ -44,6 +47,7 @@ class CustomInput extends StatelessWidget {
           validator: validator,
           readOnly: readOnly,
           onTap: onTap,
+          inputFormatters: inputFormatters,
           style: AppTextStyles.regular(16, AppColors.neutral950),
           decoration: InputDecoration(
             hintText: hintText,

@@ -7,6 +7,7 @@ class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
   final IconData? icon;
+  final Widget? leadingWidget;
   final CustomButtonSize size;
   final bool isLoading;
   final bool isDisabled;
@@ -21,6 +22,7 @@ class CustomButton extends StatelessWidget {
     required this.text,
     this.onPressed,
     this.icon,
+    this.leadingWidget,
     this.size = CustomButtonSize.medium,
     this.isLoading = false,
     this.isDisabled = false,
@@ -134,7 +136,10 @@ class CustomButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[
+                  if (leadingWidget != null) ...[
+                    leadingWidget!,
+                    const SizedBox(width: 8),
+                  ] else if (icon != null) ...[
                     Icon(icon, size: iconSize),
                     const SizedBox(width: 8),
                   ],

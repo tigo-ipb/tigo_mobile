@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   tabler_icons_plus: ^3.27.0
   google_fonts: ^6.2.1
+  http: ^1.2.0
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:
