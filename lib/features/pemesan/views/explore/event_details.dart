@@ -781,7 +781,10 @@ class _EventDetailsViewState extends State<EventDetailsView> {
                     children: [
                       Text(
                         'Mulai dari',
-                        style: AppTextStyles.medium(14, AppColors.neutral950),
+                        style: AppTextStyles.medium(
+                          12,
+                          AppColors.neutral950,
+                        ).copyWith(height: 1.0),
                       ),
                       Text(
                         priceText,
