@@ -8,6 +8,7 @@ import '../../../../shared/widgets/searchbar.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../blocs/home_bloc.dart';
+import '../explore/event_details.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -76,9 +77,9 @@ class _HomeViewState extends State<HomeView> {
                   builder: (context, _) {
                     final carouselImages = _homeBloc.featuredEvents.isNotEmpty
                         ? _homeBloc.featuredEvents
-                            .take(3)
-                            .map((e) => AppConstants.resolveImageUrl(e.image))
-                            .toList()
+                              .take(3)
+                              .map((e) => AppConstants.resolveImageUrl(e.image))
+                              .toList()
                         : [
                             'https://picsum.photos/id/1/800/400',
                             'https://picsum.photos/id/2/800/400',
@@ -236,18 +237,30 @@ class _HomeViewState extends State<HomeView> {
                               children: featured.map((event) {
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 16),
-                                  child: EventCardMid(
-                                    title: event.name,
-                                    organizerName: event.organizerName,
-                                    date: event.schedule,
-                                    location: event.venue,
-                                    price: event.formattedPrice,
-                                    imageUrl: AppConstants.resolveImageUrl(
-                                      event.image,
-                                    ),
-                                    organizerImageUrl:
-                                        AppConstants.resolveImageUrl(
-                                      event.organizerPhoto,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EventDetailsView(event: event),
+                                        ),
+                                      );
+                                    },
+                                    child: EventCardMid(
+                                      title: event.name,
+                                      organizerName: event.organizerName,
+                                      date: event.schedule,
+                                      location: event.venue,
+                                      price: event.formattedPrice,
+                                      imageUrl: AppConstants.resolveImageUrl(
+                                        event.image,
+                                      ),
+                                      organizerImageUrl:
+                                          AppConstants.resolveImageUrl(
+                                            event.organizerPhoto,
+                                          ),
+                                      category: event.category,
                                     ),
                                   ),
                                 );
@@ -276,18 +289,30 @@ class _HomeViewState extends State<HomeView> {
                               children: others.map((event) {
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 12),
-                                  child: EventCardSmall(
-                                    title: event.name,
-                                    organizerName: event.organizerName,
-                                    date: event.schedule,
-                                    location: event.venue,
-                                    price: event.formattedPrice,
-                                    imageUrl: AppConstants.resolveImageUrl(
-                                      event.image,
-                                    ),
-                                    organizerImageUrl:
-                                        AppConstants.resolveImageUrl(
-                                      event.organizerPhoto,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EventDetailsView(event: event),
+                                        ),
+                                      );
+                                    },
+                                    child: EventCardSmall(
+                                      title: event.name,
+                                      organizerName: event.organizerName,
+                                      date: event.schedule,
+                                      location: event.venue,
+                                      price: event.formattedPrice,
+                                      imageUrl: AppConstants.resolveImageUrl(
+                                        event.image,
+                                      ),
+                                      organizerImageUrl:
+                                          AppConstants.resolveImageUrl(
+                                            event.organizerPhoto,
+                                          ),
+                                      category: event.category,
                                     ),
                                   ),
                                 );

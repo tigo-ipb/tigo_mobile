@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
+import 'package:tigo_mobile/features/pemesan/views/explore/event_details.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/events_cards/large.dart';
@@ -23,7 +24,7 @@ class _ExploreViewState extends State<ExploreView> {
   late final ExploreBloc _exploreBloc;
   late final ScrollController _scrollController;
   late final TextEditingController _searchController;
-  
+
   FilterData? currentFilters;
   PriceSortOption priceSort = PriceSortOption.harga;
   DateSortOption dateSort = DateSortOption.tanggal;
@@ -133,7 +134,8 @@ class _ExploreViewState extends State<ExploreView> {
     }
 
     // Urutkan berdasarkan tanggal
-    if (dateSort == DateSortOption.terbaru || dateSort == DateSortOption.terlama) {
+    if (dateSort == DateSortOption.terbaru ||
+        dateSort == DateSortOption.terlama) {
       list.sort((a, b) {
         final dateA = DateTime.tryParse(a.schedule) ?? DateTime(1970);
         final dateB = DateTime.tryParse(b.schedule) ?? DateTime(1970);
@@ -219,7 +221,8 @@ class _ExploreViewState extends State<ExploreView> {
                     label: 'Olahraga',
                     icon: TablerIcons.ballBasketball,
                     isSelected:
-                        currentFilters?.categories.contains('Olahraga') ?? false,
+                        currentFilters?.categories.contains('Olahraga') ??
+                        false,
                     onTap: () => _toggleCategoryFilter('Olahraga'),
                   ),
                 ],
@@ -266,9 +269,7 @@ class _ExploreViewState extends State<ExploreView> {
                 builder: (context, _) {
                   if (_exploreBloc.isLoading) {
                     return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.sky500,
-                      ),
+                      child: CircularProgressIndicator(color: AppColors.sky500),
                     );
                   }
 
@@ -316,7 +317,8 @@ class _ExploreViewState extends State<ExploreView> {
                   return ListView.separated(
                     controller: _scrollController,
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    itemCount: events.length + (_exploreBloc.isLoadingMore ? 1 : 0),
+                    itemCount:
+                        events.length + (_exploreBloc.isLoadingMore ? 1 : 0),
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 20),
                     itemBuilder: (context, index) {
@@ -332,15 +334,28 @@ class _ExploreViewState extends State<ExploreView> {
                       }
 
                       final event = events[index];
-                      return EventCardLarge(
-                        title: event.name,
-                        organizerName: event.organizerName,
-                        date: event.schedule,
-                        location: event.venue,
-                        price: event.formattedPrice,
-                        imageUrl: AppConstants.resolveImageUrl(event.image),
-                        organizerImageUrl:
-                            AppConstants.resolveImageUrl(event.organizerPhoto),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EventDetailsView(eventId: event.id),
+                            ),
+                          );
+                        },
+                        child: EventCardLarge(
+                          title: event.name,
+                          organizerName: event.organizerName,
+                          date: event.schedule,
+                          location: event.venue,
+                          price: event.formattedPrice,
+                          imageUrl: AppConstants.resolveImageUrl(event.image),
+                          organizerImageUrl: AppConstants.resolveImageUrl(
+                            event.organizerPhoto,
+                          ),
+                          category: event.category,
+                        ),
                       );
                     },
                   );

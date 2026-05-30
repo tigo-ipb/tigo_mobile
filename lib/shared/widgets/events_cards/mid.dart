@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/constants/app_icons.dart';
+import '../event_tag.dart';
 
 class EventCardMid extends StatelessWidget {
   final String? title;
@@ -11,6 +12,7 @@ class EventCardMid extends StatelessWidget {
   final String? price;
   final String? imageUrl;
   final String? organizerImageUrl;
+  final String? category;
 
   const EventCardMid({
     super.key,
@@ -22,6 +24,7 @@ class EventCardMid extends StatelessWidget {
     this.price,
     this.imageUrl,
     this.organizerImageUrl,
+    this.category,
   });
 
   @override
@@ -42,18 +45,35 @@ class EventCardMid extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: imageUrl != null
-                    ? Image.network(imageUrl!, fit: BoxFit.cover)
-                    : Container(
-                        color: AppColors.neutral100,
-                        child: Icon(
-                          AppIcons.calendar,
-                          size: 24,
-                          color: AppColors.neutral300,
+              child: Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: imageUrl != null && imageUrl!.isNotEmpty
+                        ? Image.network(imageUrl!, fit: BoxFit.cover)
+                        : Container(
+                            color: AppColors.neutral100,
+                            child: Icon(
+                              AppIcons.calendar,
+                              size: 24,
+                              color: AppColors.neutral300,
+                            ),
+                          ),
+                  ),
+                  if (category != null && category!.isNotEmpty)
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: EventTag(
+                        category: category!,
+                        fontSize: 10,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
                       ),
+                    ),
+                ],
               ),
             ),
           ),

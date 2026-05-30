@@ -1,4 +1,5 @@
 import '../models/event_model.dart';
+import '../models/event_detail_model.dart';
 import 'api_client.dart';
 
 class ExplorePaginatedResult {
@@ -77,5 +78,12 @@ class ExploreService {
       lastPage: lastPage,
       hasMore: currentPage < lastPage,
     );
+  }
+
+  /// GET /events/{id}
+  static Future<EventDetailModel> fetchEventDetails(String id) async {
+    final res = await ApiClient.get('/events/$id', withAuth: false);
+    final data = res['data'] as Map<String, dynamic>? ?? {};
+    return EventDetailModel.fromJson(data);
   }
 }

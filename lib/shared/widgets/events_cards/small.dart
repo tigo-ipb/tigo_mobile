@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
 import '../../../core/constants/app_icons.dart';
+import '../event_tag.dart';
 
 class EventCardSmall extends StatelessWidget {
   final String? title;
@@ -11,6 +12,7 @@ class EventCardSmall extends StatelessWidget {
   final String? price;
   final String? imageUrl;
   final String? organizerImageUrl;
+  final String? category;
 
   const EventCardSmall({
     super.key,
@@ -22,6 +24,7 @@ class EventCardSmall extends StatelessWidget {
     this.price,
     this.imageUrl,
     this.organizerImageUrl,
+    this.category,
   });
 
   @override
@@ -42,7 +45,7 @@ class EventCardSmall extends StatelessWidget {
             child: SizedBox(
               width: 100,
               height: 100,
-              child: imageUrl != null
+              child: imageUrl != null && imageUrl!.isNotEmpty
                   ? Image.network(imageUrl!, fit: BoxFit.cover)
                   : Container(
                       color: AppColors.neutral100,
@@ -60,6 +63,17 @@ class EventCardSmall extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (category != null && category!.isNotEmpty) ...[
+                  EventTag(
+                    category: category!,
+                    fontSize: 9,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 // Title
                 Text(
                   title ?? 'Title',

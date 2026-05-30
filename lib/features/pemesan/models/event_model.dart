@@ -7,6 +7,7 @@ class EventModel {
   final int lowestPrice;
   final String organizerName;
   final String organizerPhoto;
+  final String category;
 
   EventModel({
     required this.id,
@@ -17,6 +18,7 @@ class EventModel {
     required this.lowestPrice,
     required this.organizerName,
     required this.organizerPhoto,
+    required this.category,
   });
 
   factory EventModel.fromJson(Map<String, dynamic> json) {
@@ -26,11 +28,14 @@ class EventModel {
       venue: json['venue'] ?? 'Lokasi TBA',
       image: json['image'] ?? '',
       schedule: json['schedule'] ?? '',
-      lowestPrice: (json['lowest_price'] ?? 0) is int
-          ? json['lowest_price']
-          : (json['lowest_price'] as num).toInt(),
+      lowestPrice: json['lowest_price'] != null
+          ? (json['lowest_price'] is int
+              ? json['lowest_price'] as int
+              : (json['lowest_price'] as num).toInt())
+          : 0,
       organizerName: json['organizer_name'] ?? 'Penyelenggara',
       organizerPhoto: json['organizer_photo'] ?? '',
+      category: json['category'] ?? '',
     );
   }
 
