@@ -158,7 +158,7 @@ class _ExploreViewState extends State<ExploreView> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: CustomSearchBar(
                 controller: _searchController,
                 onChanged: _onSearchChanged,

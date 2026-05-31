@@ -5,7 +5,7 @@ import 'features/pemesan/views/home/home.dart';
 import 'features/pemesan/views/explore/explore.dart';
 import 'features/pemesan/views/ticket/ticket.dart';
 import 'features/pemesan/views/profile/profile.dart';
-import 'features/pemesan/views/login/role.dart';
+import 'features/splash_screen/splash.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'Tigo Mobile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const RoleView(),
+      home: const SplashScreen(),
     );
   }
 }
