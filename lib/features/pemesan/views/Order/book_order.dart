@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/book_card_ticket.dart';
 import '../../blocs/checkout_bloc.dart';
 import '../../models/event_detail_model.dart';
+import 'ticket_identity.dart';
 
 class BookOrderView extends StatefulWidget {
   final EventDetailModel eventDetail;
@@ -17,20 +17,7 @@ class BookOrderView extends StatefulWidget {
 }
 
 class _BookOrderViewState extends State<BookOrderView> {
-  late final CheckoutBloc _checkoutBloc;
   final Map<String, int> _quantities = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _checkoutBloc = CheckoutBloc();
-  }
-
-  @override
-  void dispose() {
-    _checkoutBloc.dispose();
-    super.dispose();
-  }
 
   String _formatPrice(int price, {bool showFree = false}) {
     if (price <= 0) return showFree ? 'Free' : 'Rp.0';
@@ -63,81 +50,6 @@ class _BookOrderViewState extends State<BookOrderView> {
     return sum;
   }
 
-  Future<void> _onCheckout() async {
-    final items = _quantities.entries
-        .where((e) => e.value > 0)
-        .map((e) => TicketOrderItem(typeId: e.key, quantity: e.value))
-        .toList();
-
-    if (items.isEmpty) return;
-
-    final success = await _checkoutBloc.checkout(
-      eventId: widget.eventDetail.id,
-      ticketItems: items,
-    );
-
-    if (!mounted) return;
-
-    if (success) {
-      final result = _checkoutBloc.result;
-      if (result != null && result.paymentUrl != null) {
-        final uri = Uri.tryParse(result.paymentUrl!);
-        if (uri != null && await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
-      } else {
-        _showSuccessDialog();
-      }
-    } else {
-      _showErrorSnackBar(_checkoutBloc.errorMessage ?? 'Checkout gagal.');
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.neutral300),
-        ),
-        title: Text(
-          'Tiket Berhasil Dipesan!',
-          style: AppTextStyles.medium(16, AppColors.neutral900),
-        ),
-        content: Text(
-          'Tiket gratis kamu telah berhasil dipesan. Cek di halaman tiket.',
-          style: AppTextStyles.regular(13, AppColors.neutral600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx); // Close dialog
-              Navigator.pop(context); // Go back to details
-            },
-            child: Text(
-              'OK',
-              style: AppTextStyles.medium(13, AppColors.sky500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg, style: AppTextStyles.regular(13, Colors.white)),
-        backgroundColor: AppColors.red500,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final detail = widget.eventDetail;
@@ -152,15 +64,21 @@ class _BookOrderViewState extends State<BookOrderView> {
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            AppIcons.arrowNarrowLeft,
-            color: AppColors.neutral950,
-            size: 24,
+        leading: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.only(left: 20),
+            alignment: Alignment.centerLeft,
+            child: Icon(
+              AppIcons.arrowNarrowLeft,
+              color: AppColors.neutral950,
+              size: 24,
+            ),
           ),
-          onPressed: () => Navigator.pop(context),
         ),
-        titleSpacing: 0,
+        leadingWidth: 44,
+        titleSpacing: 8,
         title: Text(
           'Book Event',
           style: AppTextStyles.medium(16, AppColors.neutral950),
@@ -264,16 +182,25 @@ class _BookOrderViewState extends State<BookOrderView> {
       bottomNavigationBar: Container(
         color: Colors.white,
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-        child: ListenableBuilder(
-          listenable: _checkoutBloc,
-          builder: (context, _) {
-            return CustomButton(
-              text:
-                  'Continue - ${_totalPrice == 0 ? 'Rp.0.000' : _formatPrice(_totalPrice)}',
-              size: CustomButtonSize.large,
-              isDisabled: _totalItems == 0,
-              isLoading: _checkoutBloc.isLoading,
-              onPressed: _onCheckout,
+        child: CustomButton(
+          text:
+              'Continue - ${_totalPrice == 0 ? 'Rp.0.000' : _formatPrice(_totalPrice)}',
+          size: CustomButtonSize.large,
+          isDisabled: _totalItems == 0,
+          onPressed: () {
+            final items = _quantities.entries
+                .where((e) => e.value > 0)
+                .map((e) => TicketOrderItem(typeId: e.key, quantity: e.value))
+                .toList();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TicketIdentityView(
+                  eventDetail: widget.eventDetail,
+                  ticketItems: items,
+                  totalPrice: _totalPrice,
+                ),
+              ),
             );
           },
         ),

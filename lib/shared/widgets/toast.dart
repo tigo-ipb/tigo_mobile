@@ -61,12 +61,12 @@ class ToastWidget extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.bold(16, AppColors.neutral950),
+                  style: AppTextStyles.semiBold(16, AppColors.neutral950),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   message,
-                  style: AppTextStyles.regular(14, AppColors.neutral600),
+                  style: AppTextStyles.regular(14, AppColors.neutral950),
                 ),
               ],
             ),

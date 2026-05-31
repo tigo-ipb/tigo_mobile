@@ -1,0 +1,576 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/constants/app_theme.dart';
+import '../../../../core/constants/app_icons.dart';
+import '../../../../shared/widgets/custom_button.dart';
+import '../../../../shared/widgets/input.dart';
+import '../../blocs/checkout_bloc.dart';
+import '../../blocs/profile_bloc.dart';
+import '../../models/event_detail_model.dart';
+
+class TicketIdentityView extends StatefulWidget {
+  final EventDetailModel eventDetail;
+  final List<TicketOrderItem> ticketItems;
+  final int totalPrice;
+
+  const TicketIdentityView({
+    super.key,
+    required this.eventDetail,
+    required this.ticketItems,
+    required this.totalPrice,
+  });
+
+  @override
+  State<TicketIdentityView> createState() => _TicketIdentityViewState();
+}
+
+class _TicketIdentityViewState extends State<TicketIdentityView> {
+  late final CheckoutBloc _checkoutBloc;
+  late final ProfileBloc _profileBloc;
+  bool _isInitialized = false;
+
+  final _nameController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _phoneCodeController = TextEditingController(text: '+62');
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  bool _isAgreed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkoutBloc = CheckoutBloc();
+    _profileBloc = ProfileBloc();
+
+    _nameController.addListener(_updateFormState);
+    _dobController.addListener(_updateFormState);
+    _phoneCodeController.addListener(_updateFormState);
+    _phoneController.addListener(_updateFormState);
+    _emailController.addListener(_updateFormState);
+
+    _profileBloc.addListener(_onProfileBlocChanged);
+    _profileBloc.fetchProfile();
+  }
+
+  @override
+  void dispose() {
+    _checkoutBloc.dispose();
+    _profileBloc.removeListener(_onProfileBlocChanged);
+    _profileBloc.dispose();
+
+    _nameController.removeListener(_updateFormState);
+    _dobController.removeListener(_updateFormState);
+    _phoneCodeController.removeListener(_updateFormState);
+    _phoneController.removeListener(_updateFormState);
+    _emailController.removeListener(_updateFormState);
+
+    _nameController.dispose();
+    _dobController.dispose();
+    _phoneCodeController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _onProfileBlocChanged() {
+    if (_profileBloc.status == ProfileStatus.loaded &&
+        _profileBloc.user != null) {
+      final user = _profileBloc.user!;
+
+      if (!_isInitialized) {
+        _nameController.text = user.name ?? '';
+
+        // Tanggal lahir: yyyy-MM-dd -> DD-MM-YYYY untuk UI
+        if (user.birthDate != null && user.birthDate!.isNotEmpty) {
+          try {
+            final parts = user.birthDate!.split('-');
+            if (parts.length == 3) {
+              if (parts[0].length == 4) {
+                _dobController.text = '${parts[2]}-${parts[1]}-${parts[0]}';
+              } else {
+                _dobController.text = user.birthDate!;
+              }
+            }
+          } catch (_) {
+            _dobController.text = user.birthDate!;
+          }
+        }
+
+        _phoneCodeController.text = user.phoneCode ?? '+62';
+        _phoneController.text = user.phoneNumber ?? '';
+        _emailController.text = user.email;
+
+        _isInitialized = true;
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    }
+  }
+
+  void _updateFormState() {
+    setState(() {});
+  }
+
+  bool get _isFormValid {
+    return _nameController.text.isNotEmpty &&
+        _dobController.text.isNotEmpty &&
+        _phoneController.text.isNotEmpty &&
+        _emailController.text.isNotEmpty &&
+        _emailController.text.contains('@') &&
+        _isAgreed;
+  }
+
+  String _formatPrice(int price) {
+    if (price <= 0) return 'Rp.0';
+    final formatted = price.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+    return 'Rp.$formatted';
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime initialDate = DateTime(2005, 12, 15);
+    final dobText = _dobController.text;
+    if (dobText.isNotEmpty) {
+      final parts = dobText.split('-');
+      if (parts.length == 3) {
+        try {
+          final year = int.parse(parts[2]);
+          final month = int.parse(parts[1]);
+          final day = int.parse(parts[0]);
+
+          if (year >= 1900) {
+            initialDate = DateTime(year, month, day);
+          } else {
+            // Might be yyyy-MM-dd format
+            final altYear = int.parse(parts[0]);
+            final altMonth = int.parse(parts[1]);
+            final altDay = int.parse(parts[2]);
+            if (altYear >= 1900) {
+              initialDate = DateTime(altYear, altMonth, altDay);
+            }
+          }
+        } catch (_) {
+          // Keep fallback initialDate
+        }
+      }
+    }
+
+    final now = DateTime.now();
+    if (initialDate.isBefore(DateTime(1900))) {
+      initialDate = DateTime(1900);
+    }
+    if (initialDate.isAfter(now)) {
+      initialDate = now;
+    }
+
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.sky500,
+              onPrimary: Colors.white,
+              onSurface: AppColors.neutral900,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        final day = picked.day.toString().padLeft(2, '0');
+        final month = picked.month.toString().padLeft(2, '0');
+        _dobController.text = '$day-$month-${picked.year}';
+      });
+    }
+  }
+
+  void _showCountryCodePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: Colors.white,
+      builder: (ctx) {
+        final codes = ['+62', '+00', '+1', '+60'];
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'Pilih Kode Negara',
+                  style: AppTextStyles.medium(16, AppColors.neutral950),
+                ),
+              ),
+              const Divider(color: AppColors.neutral200, height: 1),
+              ...codes.map((code) {
+                return ListTile(
+                  title: Center(
+                    child: Text(
+                      code,
+                      style: AppTextStyles.regular(16, AppColors.neutral950),
+                    ),
+                  ),
+                  onTap: () {
+                    _phoneCodeController.text = code;
+                    Navigator.pop(ctx);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _onCheckout() async {
+    if (!_isFormValid) return;
+
+    final success = await _checkoutBloc.checkout(
+      eventId: widget.eventDetail.id,
+      ticketItems: widget.ticketItems,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      final result = _checkoutBloc.result;
+      if (result != null && result.paymentUrl != null) {
+        final uri = Uri.tryParse(result.paymentUrl!);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      } else {
+        _showSuccessDialog();
+      }
+    } else {
+      _showErrorSnackBar(_checkoutBloc.errorMessage ?? 'Checkout gagal.');
+    }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.neutral300),
+        ),
+        title: Text(
+          'Tiket Berhasil Dipesan!',
+          style: AppTextStyles.medium(16, AppColors.neutral900),
+        ),
+        content: Text(
+          'Tiket gratis kamu telah berhasil dipesan. Cek di halaman tiket.',
+          style: AppTextStyles.regular(13, AppColors.neutral600),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx); // Close dialog
+              Navigator.pop(context); // Pop TicketIdentityView
+              Navigator.pop(context); // Pop BookOrderView
+            },
+            child: Text(
+              'OK',
+              style: AppTextStyles.medium(13, AppColors.sky500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, style: AppTextStyles.regular(13, Colors.white)),
+        backgroundColor: AppColors.red500,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: ListenableBuilder(
+            listenable: _profileBloc,
+            builder: (context, _) {
+              final isLoading =
+                  _profileBloc.isLoading || _checkoutBloc.isLoading;
+
+              return Column(
+                children: [
+                  // Custom Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Row(
+                            children: [
+                              Icon(
+                                AppIcons.arrowNarrowLeft,
+                                size: 24,
+                                color: AppColors.neutral950,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Pilih Ticket',
+                                style: AppTextStyles.medium(
+                                  16,
+                                  AppColors.neutral950,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_profileBloc.isLoading && !_isInitialized)
+                    const Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.sky500,
+                        ),
+                      ),
+                    )
+                  else
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Informasi tiket',
+                              style: AppTextStyles.medium(
+                                18,
+                                AppColors.neutral950,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Fields Card/Container
+                            SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Nama Field
+                                  CustomInput(
+                                    label: 'Nama',
+                                    controller: _nameController,
+                                    hintText: 'Masukkan nama lengkap',
+                                    readOnly: isLoading,
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Tanggal Lahir Field
+                                  CustomInput(
+                                    label: 'Tanggal Lahir',
+                                    controller: _dobController,
+                                    hintText: 'DD-MM-YYYY',
+                                    suffixIcon: Padding(
+                                      padding: const EdgeInsets.only(right: 16),
+                                      child: Icon(
+                                        AppIcons.calendar,
+                                        color: AppColors.neutral300,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    readOnly: true,
+                                    onTap: isLoading
+                                        ? null
+                                        : () => _selectDate(context),
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Code & Phone Number Fields (Side-by-side)
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Kode
+                                      SizedBox(
+                                        width: 112,
+                                        child: CustomInput(
+                                          label: 'Kode',
+                                          controller: _phoneCodeController,
+                                          hintText: '+62',
+                                          suffixIcon: Padding(
+                                            padding: const EdgeInsets.only(
+                                              right: 16,
+                                            ),
+                                            child: Icon(
+                                              AppIcons.chevronDown,
+                                              color: AppColors.neutral950,
+                                              size: 20,
+                                            ),
+                                          ),
+                                          readOnly: true,
+                                          onTap: isLoading
+                                              ? null
+                                              : () => _showCountryCodePicker(),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      // Nomor Handphone
+                                      Expanded(
+                                        child: CustomInput(
+                                          label: 'Nomor Handphone',
+                                          controller: _phoneController,
+                                          hintText: '8xxxxxxxxxx',
+                                          keyboardType: TextInputType.phone,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter
+                                                .digitsOnly,
+                                          ],
+                                          readOnly: isLoading,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+
+                                  // Email Field
+                                  CustomInput(
+                                    label: 'Email',
+                                    controller: _emailController,
+                                    hintText: 'nama@domain.com',
+                                    keyboardType: TextInputType.emailAddress,
+                                    readOnly: isLoading,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Agreement Checkbox
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _isAgreed = !_isAgreed;
+                                });
+                              },
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 24,
+                                    height: 24,
+                                    margin: const EdgeInsets.only(top: 2),
+                                    decoration: BoxDecoration(
+                                      color: _isAgreed
+                                          ? AppColors.sky500
+                                          : Colors.white,
+                                      border: Border.all(
+                                        color: _isAgreed
+                                            ? AppColors.sky500
+                                            : AppColors.neutral950,
+                                        width: 1.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: _isAgreed
+                                        ? const Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 16,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text.rich(
+                                      TextSpan(
+                                        text:
+                                            'Saya telah membaca dan menyetujui ',
+                                        style: AppTextStyles.regular(
+                                          14,
+                                          AppColors.neutral950,
+                                        ).copyWith(height: 1.4),
+                                        children: [
+                                          TextSpan(
+                                            text:
+                                                'Ketentuan Layanan dan Kebijakan Privasi',
+                                            style:
+                                                AppTextStyles.regular(
+                                                  14,
+                                                  AppColors.neutral950,
+                                                ).copyWith(
+                                                  decoration:
+                                                      TextDecoration.underline,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  // Bottom Button Container
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    child: ListenableBuilder(
+                      listenable: _checkoutBloc,
+                      builder: (context, _) {
+                        return CustomButton(
+                          text: 'Bayar - ${_formatPrice(widget.totalPrice)}',
+                          size: CustomButtonSize.large,
+                          isDisabled: !_isFormValid,
+                          isLoading: _checkoutBloc.isLoading,
+                          onPressed: _onCheckout,
+                          width: double.infinity,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}

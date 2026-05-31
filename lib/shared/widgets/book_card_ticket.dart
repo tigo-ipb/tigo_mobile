@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import '../../core/constants/app_theme.dart';
-import 'ticket_detail_dialog.dart';
+import '../dialogs/ticket_detail_dialog.dart';
 
 class BookCardTicket extends StatelessWidget {
   final String name;

@@ -1,14 +1,17 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/custom_button.dart';
+import '../../../../shared/widgets/toast.dart';
 import '../../../../shared/dialogs/logout.dart';
 import '../../blocs/profile_bloc.dart';
 import '../../services/auth_service.dart';
 import 'account.dart';
 import 'edit_profile.dart';
 import 'password.dart';
+import '../login/role.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -46,9 +49,7 @@ class _ProfileViewState extends State<ProfileView> {
             builder: (context, _) {
               if (_profileBloc.isLoading) {
                 return const Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.sky500,
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.sky500),
                 );
               }
 
@@ -101,8 +102,8 @@ class _ProfileViewState extends State<ProfileView> {
                 );
               }
 
-              final avatarUrl = user.profilePhoto != null &&
-                      user.profilePhoto!.isNotEmpty
+              final avatarUrl =
+                  user.profilePhoto != null && user.profilePhoto!.isNotEmpty
                   ? AppConstants.resolveImageUrl(user.profilePhoto)
                   : 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=256&auto=format&fit=crop';
 
@@ -112,8 +113,10 @@ class _ProfileViewState extends State<ProfileView> {
 
               return SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -149,8 +152,10 @@ class _ProfileViewState extends State<ProfileView> {
                           const SizedBox(height: 24),
                           Text(
                             displayName,
-                            style:
-                                AppTextStyles.medium(20, AppColors.neutral950),
+                            style: AppTextStyles.medium(
+                              20,
+                              AppColors.neutral950,
+                            ),
                           ),
                         ],
                       ),
@@ -180,40 +185,112 @@ class _ProfileViewState extends State<ProfileView> {
                           child: CustomButton(
                             text: 'Share Profile',
                             onPressed: () {
-                              showDialog(
+                              showGeneralDialog(
                                 context: context,
-                                builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  backgroundColor: Colors.white,
-                                  title: Text(
-                                    'Informasi',
-                                    style: AppTextStyles.semiBold(
-                                      18,
-                                      AppColors.neutral950,
-                                    ),
-                                  ),
-                                  content: Text(
-                                    'Maaf, fitur ini sedang dalam tahap pengembangan',
-                                    style: AppTextStyles.regular(
-                                      14,
-                                      AppColors.neutral600,
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text(
-                                        'Oke',
-                                        style: AppTextStyles.medium(
-                                          14,
-                                          AppColors.sky500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                barrierDismissible: true,
+                                barrierLabel: 'Close',
+                                barrierColor: Colors.black.withValues(
+                                  alpha: 0.25,
                                 ),
+                                transitionDuration: const Duration(
+                                  milliseconds: 200,
+                                ),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) {
+                                      return Dialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        backgroundColor: Colors.white,
+                                        elevation: 0,
+                                        insetPadding:
+                                            const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                            ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(24),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Informasi',
+                                                      style:
+                                                          AppTextStyles.medium(
+                                                            18,
+                                                            AppColors.sky500,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  GestureDetector(
+                                                    onTap: () =>
+                                                        Navigator.pop(context),
+                                                    child: Icon(
+                                                      AppIcons.close,
+                                                      color:
+                                                          AppColors.neutral950,
+                                                      size: 24,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Text(
+                                                'Maaf, fitur ini sedang dalam tahap pengembangan',
+                                                style: AppTextStyles.regular(
+                                                  14,
+                                                  AppColors.neutral700,
+                                                ).copyWith(height: 1.5),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                transitionBuilder:
+                                    (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      final double blurValue =
+                                          animation.value * 5.0;
+                                      return BackdropFilter(
+                                        filter: ImageFilter.blur(
+                                          sigmaX: blurValue,
+                                          sigmaY: blurValue,
+                                        ),
+                                        child: FadeTransition(
+                                          opacity: animation,
+                                          child: ScaleTransition(
+                                            scale:
+                                                Tween<double>(
+                                                  begin: 0.95,
+                                                  end: 1.0,
+                                                ).animate(
+                                                  CurvedAnimation(
+                                                    parent: animation,
+                                                    curve: Curves.easeOut,
+                                                  ),
+                                                ),
+                                            child: child,
+                                          ),
+                                        ),
+                                      );
+                                    },
                               );
                             },
                             size: CustomButtonSize.small,
@@ -229,8 +306,10 @@ class _ProfileViewState extends State<ProfileView> {
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        border:
-                            Border.all(color: AppColors.neutral300, width: 1),
+                        border: Border.all(
+                          color: AppColors.neutral300,
+                          width: 1,
+                        ),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -294,18 +373,22 @@ class _ProfileViewState extends State<ProfileView> {
                       text: 'Log Out',
                       icon: AppIcons.logout,
                       onPressed: () async {
-                        final confirmLogout = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => const LogoutDialog(),
-                        );
+                        final confirmLogout = await LogoutDialog.show(context);
 
                         if (confirmLogout == true) {
                           await AuthService.logout();
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Berhasil keluar dari akun'),
+                          AppToast.showSuccess(
+                            context,
+                            title: 'Berhasil',
+                            message: 'Berhasil keluar dari akun',
+                          );
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RoleView(),
                             ),
+                            (route) => false,
                           );
                         }
                       },
@@ -347,10 +430,7 @@ class _ProfileViewState extends State<ProfileView> {
               child: Icon(icon, color: AppColors.sky500, size: 20),
             ),
             const SizedBox(width: 16),
-            Text(
-              title,
-              style: AppTextStyles.medium(16, AppColors.neutral900),
-            ),
+            Text(title, style: AppTextStyles.medium(16, AppColors.neutral900)),
             const Spacer(),
             Icon(AppIcons.chevronRight, color: AppColors.neutral900, size: 20),
           ],
