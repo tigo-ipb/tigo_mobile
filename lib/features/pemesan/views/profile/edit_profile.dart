@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -109,14 +110,59 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
   }
 
-  void _changePhoto() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Pilihan ubah foto profil segera hadir!'),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _changePhoto() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      final success = await _profileBloc.updateProfile(
+        username: _usernameController.text,
+        profilePhoto: pickedFile,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle_rounded, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Foto profil berhasil diperbarui!'),
+              ],
+            ),
+            backgroundColor: AppColors.green500,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _profileBloc.errorMessage ?? 'Gagal memperbarui foto profil.',
+            ),
+            backgroundColor: AppColors.red500,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: AppColors.red500,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -129,11 +175,15 @@ class _EditProfileViewState extends State<EditProfileView> {
           child: ListenableBuilder(
             listenable: _profileBloc,
             builder: (context, _) {
-              final isLoading = _profileBloc.isLoading || _profileBloc.isUpdating;
+              final isLoading =
+                  _profileBloc.isLoading || _profileBloc.isUpdating;
 
-              final avatarUrl = _profileBloc.user?.profilePhoto != null &&
+              final avatarUrl =
+                  _profileBloc.user?.profilePhoto != null &&
                       _profileBloc.user!.profilePhoto!.isNotEmpty
-                  ? AppConstants.resolveImageUrl(_profileBloc.user!.profilePhoto)
+                  ? AppConstants.resolveImageUrl(
+                      _profileBloc.user!.profilePhoto,
+                    )
                   : 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=256&auto=format&fit=crop';
 
               return Column(

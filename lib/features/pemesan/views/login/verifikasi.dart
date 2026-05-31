@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import '../../../../core/constants/app_theme.dart';
+import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../blocs/auth_bloc.dart';
 import 'setup_account.dart';
@@ -10,18 +10,17 @@ class VerificationView extends StatefulWidget {
   final String email;
   final String role;
 
-  const VerificationView({
-    super.key,
-    required this.email,
-    required this.role,
-  });
+  const VerificationView({super.key, required this.email, required this.role});
 
   @override
   State<VerificationView> createState() => _VerificationViewState();
 }
 
 class _VerificationViewState extends State<VerificationView> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   late final AuthBloc _authBloc;
 
@@ -93,10 +92,7 @@ class _VerificationViewState extends State<VerificationView> {
       return;
     }
 
-    final success = await _authBloc.verifyEmail(
-      email: widget.email,
-      otp: otp,
-    );
+    final success = await _authBloc.verifyEmail(email: widget.email, otp: otp);
 
     if (!mounted) return;
 
@@ -129,132 +125,193 @@ class _VerificationViewState extends State<VerificationView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(TablerIcons.chevronLeft, color: AppColors.neutral900),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: SafeArea(
         child: ListenableBuilder(
           listenable: _authBloc,
           builder: (context, _) {
             final isLoading = _authBloc.isLoading;
 
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Verifikasi Email',
-                      style: AppTextStyles.semiBold(32, AppColors.sky500),
-                    ),
-                    const SizedBox(height: 8),
-                    Text.rich(
-                      TextSpan(
-                        text: 'Kami telah mengirimkan kode OTP ke email kamu:\n',
-                        style: AppTextStyles.regular(14, AppColors.neutral500),
+            return Column(
+              children: [
+                // Custom Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Row(
+                          children: [
+                            Icon(
+                              AppIcons.arrowNarrowLeft,
+                              size: 24,
+                              color: AppColors.neutral950,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Kembali',
+                              style: AppTextStyles.medium(
+                                16,
+                                AppColors.neutral950,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 16.0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          TextSpan(
-                            text: widget.email,
-                            style: AppTextStyles.bold(14, AppColors.neutral950),
+                          Text(
+                            'Verifikasi Email',
+                            style: AppTextStyles.semiBold(32, AppColors.sky500),
+                          ),
+                          const SizedBox(height: 8),
+                          Text.rich(
+                            TextSpan(
+                              text:
+                                  'Kami telah mengirimkan kode OTP ke email kamu:\n',
+                              style: AppTextStyles.regular(
+                                14,
+                                AppColors.neutral950,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: widget.email,
+                                  style: AppTextStyles.semiBold(
+                                    14,
+                                    AppColors.neutral950,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+
+                          // OTP Inputs
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(6, (index) {
+                              return SizedBox(
+                                width: 44,
+                                height: 56,
+                                child: TextFormField(
+                                  controller: _controllers[index],
+                                  focusNode: _focusNodes[index],
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  maxLength: 1,
+                                  enabled: !isLoading,
+                                  style: AppTextStyles.bold(
+                                    20,
+                                    AppColors.neutral950,
+                                  ),
+                                  decoration: InputDecoration(
+                                    counterText: "",
+                                    contentPadding: EdgeInsets.zero,
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.neutral300,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    disabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.neutral200,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                        color: AppColors.sky500,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    if (value.isNotEmpty) {
+                                      if (index < 5) {
+                                        _focusNodes[index + 1].requestFocus();
+                                      } else {
+                                        _focusNodes[index].unfocus();
+                                      }
+                                    } else {
+                                      if (index > 0) {
+                                        _focusNodes[index - 1].requestFocus();
+                                      }
+                                    }
+                                  },
+                                ),
+                              );
+                            }),
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Verifikasi Button
+                          CustomButton(
+                            text: 'Verifikasi',
+                            size: CustomButtonSize.large,
+                            width: double.infinity,
+                            isLoading: isLoading,
+                            onPressed: _verifyOtp,
+                          ),
+                          const SizedBox(height: 32),
+
+                          // Resend Timer
+                          Center(
+                            child: _canResend
+                                ? Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Belum menerima kode? ',
+                                        style: AppTextStyles.regular(
+                                          14,
+                                          AppColors.neutral500,
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: _resendCode,
+                                        child: Text(
+                                          'Kirim ulang',
+                                          style: AppTextStyles.medium(
+                                            14,
+                                            AppColors.sky500,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    'Kirim ulang dalam $_secondsRemaining s',
+                                    style: AppTextStyles.regular(
+                                      14,
+                                      AppColors.neutral500,
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 40),
-
-                    // OTP Inputs
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(6, (index) {
-                        return SizedBox(
-                          width: 44,
-                          height: 56,
-                          child: TextFormField(
-                            controller: _controllers[index],
-                            focusNode: _focusNodes[index],
-                            textAlign: TextAlign.center,
-                            keyboardType: TextInputType.number,
-                            maxLength: 1,
-                            enabled: !isLoading,
-                            style: AppTextStyles.bold(20, AppColors.neutral950),
-                            decoration: InputDecoration(
-                              counterText: "",
-                              contentPadding: EdgeInsets.zero,
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.neutral300, width: 1),
-                              ),
-                              disabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.neutral200, width: 1),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.sky500, width: 2),
-                              ),
-                            ),
-                            onChanged: (value) {
-                              if (value.isNotEmpty) {
-                                if (index < 5) {
-                                  _focusNodes[index + 1].requestFocus();
-                                } else {
-                                  _focusNodes[index].unfocus();
-                                }
-                              } else {
-                                if (index > 0) {
-                                  _focusNodes[index - 1].requestFocus();
-                                }
-                              }
-                            },
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Verifikasi Button
-                    CustomButton(
-                      text: 'Verifikasi',
-                      size: CustomButtonSize.large,
-                      width: double.infinity,
-                      isLoading: isLoading,
-                      onPressed: _verifyOtp,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Resend Timer
-                    Center(
-                      child: _canResend
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Belum menerima kode? ',
-                                  style: AppTextStyles.regular(14, AppColors.neutral500),
-                                ),
-                                GestureDetector(
-                                  onTap: _resendCode,
-                                  child: Text(
-                                    'Kirim ulang',
-                                    style: AppTextStyles.medium(14, AppColors.sky500),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Text(
-                              'Kirim ulang dalam $_secondsRemaining s',
-                              style: AppTextStyles.regular(14, AppColors.neutral500),
-                            ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             );
           },
         ),

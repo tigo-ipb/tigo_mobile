@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/api_client.dart';
@@ -154,7 +154,7 @@ class AuthBloc extends ChangeNotifier {
     String? username,
     String? bio,
     String? phoneCode,
-    File? profilePhoto,
+    XFile? profilePhoto,
   }) async {
     _setLoading();
     try {

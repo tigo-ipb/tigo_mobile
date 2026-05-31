@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_model.dart';
 import '../services/profile_service.dart';
 import '../services/api_client.dart';
@@ -41,7 +41,7 @@ class ProfileBloc extends ChangeNotifier {
   Future<bool> updateProfile({
     String? username,
     String? bio,
-    File? profilePhoto,
+    XFile? profilePhoto,
   }) async {
     _status = ProfileStatus.updating;
     _updateSuccess = false;

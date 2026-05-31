@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_model.dart';
 import 'api_client.dart';
 
@@ -13,7 +13,7 @@ class ProfileService {
   static Future<UserModel> updateProfile({
     String? username,
     String? bio,
-    File? profilePhoto,
+    XFile? profilePhoto,
   }) async {
     final fields = <String, String>{};
     if (username != null) fields['username'] = username;

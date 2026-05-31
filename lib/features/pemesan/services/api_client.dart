@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_constants.dart';
 
 /// Exception khusus untuk error dari API
@@ -173,7 +175,7 @@ class ApiClient {
   static Future<Map<String, dynamic>> postMultipart(
     String path, {
     required Map<String, String> fields,
-    File? file,
+    XFile? file,
     String fileFieldName = 'profile_photo',
     bool withAuth = true,
   }) async {
@@ -186,9 +188,20 @@ class ApiClient {
         ..fields.addAll(fields);
 
       if (file != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath(fileFieldName, file.path),
-        );
+        if (kIsWeb) {
+          final bytes = await file.readAsBytes();
+          request.files.add(
+            http.MultipartFile.fromBytes(
+              fileFieldName,
+              bytes,
+              filename: file.name,
+            ),
+          );
+        } else {
+          request.files.add(
+            await http.MultipartFile.fromPath(fileFieldName, file.path),
+          );
+        }
       }
 
       final streamedResponse = await request.send();

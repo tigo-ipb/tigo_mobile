@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../models/user_model.dart';
 import 'api_client.dart';
 
@@ -135,7 +135,7 @@ class AuthService {
     String? username,
     String? bio,
     String? phoneCode,
-    File? profilePhoto,
+    XFile? profilePhoto,
   }) async {
     final fields = Map.fromEntries(<MapEntry<String, String>>[
       MapEntry('phone_number', phoneNumber),
