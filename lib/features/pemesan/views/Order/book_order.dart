@@ -85,98 +85,106 @@ class _BookOrderViewState extends State<BookOrderView> {
         ),
         centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 20, right: 20, top: 8, bottom: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Tipe tiket Title
-            Text(
-              'Tipe tiket',
-              style: AppTextStyles.medium(18, AppColors.neutral950),
-            ),
-            const SizedBox(height: 16),
-
-            // 2. Ticket Cards List
-            ...detail.ticketTypes.map((ticket) {
-              final qty = _quantities[ticket.typeId] ?? 0;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: BookCardTicket(
-                  name: ticket.typeName,
-                  price: ticket.price,
-                  quantity: qty,
-                  availableStock: ticket.availableStock,
-                  description: ticket.description,
-                  onIncrement: () =>
-                      _increment(ticket.typeId, ticket.availableStock),
-                  onDecrement: () => _decrement(ticket.typeId),
-                ),
-              );
-            }),
-            const SizedBox(height: 8),
-
-            // 3. Details Section
-            Text(
-              'Details',
-              style: AppTextStyles.medium(18, AppColors.neutral950),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.neutral300),
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 8,
+            bottom: 16,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Tipe tiket Title
+              Text(
+                'Tipe tiket',
+                style: AppTextStyles.medium(18, AppColors.neutral950),
               ),
-              child: Column(
-                children: [
-                  if (selectedTickets.isNotEmpty) ...[
-                    ...selectedTickets.map((t) {
-                      final qty = _quantities[t.typeId] ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '$qty Ticket (${t.typeName})',
-                              style: AppTextStyles.regular(
-                                14,
-                                AppColors.neutral600,
-                              ),
-                            ),
-                            Text(
-                              _formatPrice(t.price * qty),
-                              style: AppTextStyles.medium(
-                                14,
-                                AppColors.neutral950,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                    const Divider(color: AppColors.neutral300, height: 24),
-                  ],
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total',
-                        style: AppTextStyles.medium(14, AppColors.neutral950),
-                      ),
-                      Text(
-                        _formatPrice(_totalPrice),
-                        style: AppTextStyles.medium(14, AppColors.neutral950),
-                      ),
-                    ],
+              const SizedBox(height: 16),
+
+              // 2. Ticket Cards List
+              ...detail.ticketTypes.map((ticket) {
+                final qty = _quantities[ticket.typeId] ?? 0;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: BookCardTicket(
+                    name: ticket.typeName,
+                    price: ticket.price,
+                    quantity: qty,
+                    availableStock: ticket.availableStock,
+                    description: ticket.description,
+                    onIncrement: () =>
+                        _increment(ticket.typeId, ticket.availableStock),
+                    onDecrement: () => _decrement(ticket.typeId),
                   ),
-                ],
+                );
+              }),
+              const SizedBox(height: 8),
+
+              // 3. Details Section
+              Text(
+                'Details',
+                style: AppTextStyles.medium(18, AppColors.neutral950),
               ),
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.neutral300),
+                ),
+                child: Column(
+                  children: [
+                    if (selectedTickets.isNotEmpty) ...[
+                      ...selectedTickets.map((t) {
+                        final qty = _quantities[t.typeId] ?? 0;
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '$qty Ticket (${t.typeName})',
+                                style: AppTextStyles.regular(
+                                  14,
+                                  AppColors.neutral600,
+                                ),
+                              ),
+                              Text(
+                                _formatPrice(t.price * qty),
+                                style: AppTextStyles.medium(
+                                  14,
+                                  AppColors.neutral950,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const Divider(color: AppColors.neutral300, height: 24),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total',
+                          style: AppTextStyles.medium(14, AppColors.neutral950),
+                        ),
+                        Text(
+                          _formatPrice(_totalPrice),
+                          style: AppTextStyles.medium(14, AppColors.neutral950),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(

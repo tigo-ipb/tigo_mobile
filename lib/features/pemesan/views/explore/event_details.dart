@@ -107,8 +107,10 @@ class _EventDetailsViewState extends State<EventDetailsView> {
         if (_bloc.isLoading && widget.event == null) {
           return const Scaffold(
             backgroundColor: Colors.white,
-            body: Center(
-              child: CircularProgressIndicator(color: AppColors.sky500),
+            body: SafeArea(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.sky500),
+              ),
             ),
           );
         }
@@ -116,32 +118,34 @@ class _EventDetailsViewState extends State<EventDetailsView> {
         if (_bloc.status == EventDetailStatus.error && widget.event == null) {
           return Scaffold(
             backgroundColor: Colors.white,
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _bloc.errorMessage ?? 'Gagal memuat detail event.',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.regular(14, AppColors.neutral500),
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      onPressed: () {
-                        final id = widget.eventId ?? widget.event?.id;
-                        if (id != null) {
-                          _bloc.fetchEventDetail(id);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.sky500,
-                        foregroundColor: Colors.white,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _bloc.errorMessage ?? 'Gagal memuat detail event.',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.regular(14, AppColors.neutral500),
                       ),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () {
+                          final id = widget.eventId ?? widget.event?.id;
+                          if (id != null) {
+                            _bloc.fetchEventDetail(id);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.sky500,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

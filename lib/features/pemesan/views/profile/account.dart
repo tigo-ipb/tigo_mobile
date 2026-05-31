@@ -143,9 +143,10 @@ class _AccountViewState extends State<AccountView> {
       }
     }
 
-    final success = await _profileBloc.updateProfile(
+    final success = await _profileBloc.updateAccount(
       name: _nameController.text,
-      birthDate: dobApi,
+      email: _emailController.text,
+      birthDate: dobApi ?? '',
       phoneCode: _phoneCodeController.text,
       phoneNumber: _phoneController.text,
     );

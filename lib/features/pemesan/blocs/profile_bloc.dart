@@ -39,12 +39,8 @@ class ProfileBloc extends ChangeNotifier {
   }
 
   Future<bool> updateProfile({
-    String? name,
     String? username,
     String? bio,
-    String? birthDate,
-    String? phoneCode,
-    String? phoneNumber,
     File? profilePhoto,
   }) async {
     _status = ProfileStatus.updating;
@@ -54,13 +50,41 @@ class ProfileBloc extends ChangeNotifier {
 
     try {
       _user = await ProfileService.updateProfile(
-        name: name,
         username: username,
         bio: bio,
+        profilePhoto: profilePhoto,
+      );
+      _status = ProfileStatus.loaded;
+      _updateSuccess = true;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _errorMessage = e.message;
+      _status = ProfileStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateAccount({
+    required String name,
+    required String email,
+    required String birthDate,
+    required String phoneCode,
+    required String phoneNumber,
+  }) async {
+    _status = ProfileStatus.updating;
+    _updateSuccess = false;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _user = await ProfileService.updateAccount(
+        name: name,
+        email: email,
         birthDate: birthDate,
         phoneCode: phoneCode,
         phoneNumber: phoneNumber,
-        profilePhoto: profilePhoto,
       );
       _status = ProfileStatus.loaded;
       _updateSuccess = true;

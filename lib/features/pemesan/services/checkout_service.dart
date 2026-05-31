@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import '../models/checkout_model.dart';
 import 'api_client.dart';
 
@@ -21,15 +22,37 @@ class CheckoutService {
   static Future<CheckoutResultModel> checkout({
     required String eventId,
     required List<TicketOrderItem> ticketItems,
+    required String customerName,
+    required String customerEmail,
+    required String customerPhone,
+    required String customerBirthDate,
   }) async {
-    final res = await ApiClient.post(
-      '/checkout',
-      body: {
-        'event_id': eventId,
-        'ticket_items': ticketItems.map((e) => e.toJson()).toList(),
-      },
-    );
+    final reqBody = {
+      'event_id': eventId,
+      'ticket_items': ticketItems.map((e) => e.toJson()).toList(),
+      'customer_name': customerName,
+      'customer_email': customerEmail,
+      'customer_phone': customerPhone,
+      'customer_birth_date': customerBirthDate,
+    };
 
-    return CheckoutResultModel.fromJson(res['data']);
+    // Log request body
+    developer.log('Checkout Request Body: $reqBody');
+
+    final res = await ApiClient.post('/checkout', body: reqBody);
+
+    // Log raw response
+    developer.log('Checkout Response: $res');
+
+    try {
+      return CheckoutResultModel.fromJson(res['data']);
+    } catch (e, stackTrace) {
+      developer.log(
+        'CheckoutResultModel.fromJson parsing error: $e',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 }

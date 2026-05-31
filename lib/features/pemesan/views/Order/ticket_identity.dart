@@ -8,6 +8,8 @@ import '../../../../shared/widgets/input.dart';
 import '../../blocs/checkout_bloc.dart';
 import '../../blocs/profile_bloc.dart';
 import '../../models/event_detail_model.dart';
+import '../../../../shared/dialogs/payment_success.dart';
+import '../../../../main.dart';
 
 class TicketIdentityView extends StatefulWidget {
   final EventDetailModel eventDetail;
@@ -240,22 +242,46 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
   Future<void> _onCheckout() async {
     if (!_isFormValid) return;
 
+    // Format dob kembali ke yyyy-MM-dd untuk API
+    String dobApi = '';
+    final dobStr = _dobController.text;
+    if (dobStr.isNotEmpty) {
+      final parts = dobStr.split('-');
+      if (parts.length == 3) {
+        if (parts[0].length == 2) {
+          dobApi = '${parts[2]}-${parts[1]}-${parts[0]}';
+        } else {
+          dobApi = dobStr;
+        }
+      }
+    }
+
+    final customerPhone = _phoneCodeController.text + _phoneController.text;
+
     final success = await _checkoutBloc.checkout(
       eventId: widget.eventDetail.id,
       ticketItems: widget.ticketItems,
+      customerName: _nameController.text,
+      customerEmail: _emailController.text,
+      customerPhone: customerPhone,
+      customerBirthDate: dobApi,
     );
 
     if (!mounted) return;
 
     if (success) {
       final result = _checkoutBloc.result;
-      if (result != null && result.paymentUrl != null) {
+      if (widget.totalPrice == 0 ||
+          result == null ||
+          result.paymentUrl == null) {
+        _showSuccessDialog();
+      } else {
         final uri = Uri.tryParse(result.paymentUrl!);
         if (uri != null && await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          _showSuccessDialog();
         }
-      } else {
-        _showSuccessDialog();
       }
     } else {
       _showErrorSnackBar(_checkoutBloc.errorMessage ?? 'Checkout gagal.');
@@ -263,37 +289,25 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
   }
 
   void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.neutral300),
-        ),
-        title: Text(
-          'Tiket Berhasil Dipesan!',
-          style: AppTextStyles.medium(16, AppColors.neutral900),
-        ),
-        content: Text(
-          'Tiket gratis kamu telah berhasil dipesan. Cek di halaman tiket.',
-          style: AppTextStyles.regular(13, AppColors.neutral600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx); // Close dialog
-              Navigator.pop(context); // Pop TicketIdentityView
-              Navigator.pop(context); // Pop BookOrderView
-            },
-            child: Text(
-              'OK',
-              style: AppTextStyles.medium(13, AppColors.sky500),
-            ),
+    PaymentSuccessDialog.show(
+      context,
+      eventName: widget.eventDetail.name,
+      onViewTicket: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(initialIndex: 2),
           ),
-        ],
-      ),
+          (route) => false,
+        );
+      },
+      onBackToHome: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const MainScreen(initialIndex: 0),
+          ),
+          (route) => false,
+        );
+      },
     );
   }
 
@@ -316,10 +330,12 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
         backgroundColor: Colors.white,
         body: SafeArea(
           child: ListenableBuilder(
-            listenable: _profileBloc,
+            listenable: Listenable.merge([_profileBloc, _checkoutBloc]),
             builder: (context, _) {
               final isLoading =
-                  _profileBloc.isLoading || _checkoutBloc.isLoading;
+                  _profileBloc.isLoading ||
+                  _profileBloc.isUpdating ||
+                  _checkoutBloc.isLoading;
 
               return Column(
                 children: [

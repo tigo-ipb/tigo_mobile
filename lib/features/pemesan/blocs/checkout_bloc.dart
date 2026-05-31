@@ -21,6 +21,10 @@ class CheckoutBloc extends ChangeNotifier {
   Future<bool> checkout({
     required String eventId,
     required List<TicketOrderItem> ticketItems,
+    required String customerName,
+    required String customerEmail,
+    required String customerPhone,
+    required String customerBirthDate,
   }) async {
     _status = CheckoutStatus.loading;
     _errorMessage = null;
@@ -31,6 +35,10 @@ class CheckoutBloc extends ChangeNotifier {
       _result = await CheckoutService.checkout(
         eventId: eventId,
         ticketItems: ticketItems,
+        customerName: customerName,
+        customerEmail: customerEmail,
+        customerPhone: customerPhone,
+        customerBirthDate: customerBirthDate,
       );
       _status = CheckoutStatus.success;
       notifyListeners();
