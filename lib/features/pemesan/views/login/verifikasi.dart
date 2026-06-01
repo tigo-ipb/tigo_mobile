@@ -119,7 +119,8 @@ class _VerificationViewState extends State<VerificationView> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => SetupAccountView(role: widget.role),
+          builder: (context) =>
+              SetupAccountView(role: widget.role, email: widget.email),
         ),
       );
     } else {

@@ -9,11 +9,14 @@ import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
 import '../../../../main.dart';
+import '../../models/country_model.dart';
+import '../../blocs/auth_bloc.dart';
 
 class SetupAccountView extends StatefulWidget {
   final String role;
+  final String? email;
 
-  const SetupAccountView({super.key, required this.role});
+  const SetupAccountView({super.key, required this.role, this.email});
 
   @override
   State<SetupAccountView> createState() => _SetupAccountViewState();
@@ -26,7 +29,8 @@ class _SetupAccountViewState extends State<SetupAccountView> {
   final _dobController = TextEditingController();
   final _phoneCodeController = TextEditingController(text: '+62');
   final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
+  late final TextEditingController _emailController;
+  late final AuthBloc _authBloc;
 
   // Profile photo state
   XFile? _profilePhoto;
@@ -39,6 +43,8 @@ class _SetupAccountViewState extends State<SetupAccountView> {
   @override
   void initState() {
     super.initState();
+    _authBloc = AuthBloc();
+    _emailController = TextEditingController(text: widget.email);
     _fetchCountries();
   }
 
@@ -50,6 +56,7 @@ class _SetupAccountViewState extends State<SetupAccountView> {
     _phoneCodeController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _authBloc.dispose();
     super.dispose();
   }
 
@@ -60,11 +67,14 @@ class _SetupAccountViewState extends State<SetupAccountView> {
       _countriesError = null;
     });
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://restcountries.com/v3.1/all?fields=name,idd,cca2,flags',
-        ),
-      );
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://restcountries.com/v3.1/all?fields=name,idd,cca2,flags',
+            ),
+          )
+          .timeout(const Duration(seconds: 4));
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final parsed = data.map((json) => CountryModel.fromJson(json)).toList();
@@ -82,12 +92,12 @@ class _SetupAccountViewState extends State<SetupAccountView> {
           });
         }
       } else {
-        throw Exception('Gagal memuat daftar negara.');
+        throw Exception('Gagal memuat.');
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _countriesError = 'Gagal memuat data negara. Silakan coba lagi.';
+          _countries = CountryModel.defaultCountries;
           _isLoadingCountries = false;
         });
       }
@@ -360,269 +370,335 @@ class _SetupAccountViewState extends State<SetupAccountView> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Circular Profile Avatar with edit badge
-                Center(
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: _profilePhoto != null
-                              ? (kIsWeb
-                                    ? Image.network(
-                                        _profilePhoto!.path,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.file(
-                                        File(_profilePhoto!.path),
-                                        fit: BoxFit.cover,
-                                      ))
-                              : CustomPaint(painter: CheckerboardPainter()),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: _changePhoto,
-                          child: Container(
-                            width: 32,
-                            height: 32,
+        child: ListenableBuilder(
+          listenable: _authBloc,
+          builder: (context, _) {
+            final isLoading = _authBloc.isLoading;
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Circular Profile Avatar with edit badge
+                    Center(
+                      child: Stack(
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 120,
                             decoration: BoxDecoration(
-                              color: AppColors.sky50,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                                  color: Colors.black.withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
-                            alignment: Alignment.center,
-                            child: Icon(
-                              AppIcons.edit,
-                              size: 16,
-                              color: AppColors.sky500,
+                            child: ClipOval(
+                              child: _profilePhoto != null
+                                  ? (kIsWeb
+                                        ? Image.network(
+                                            _profilePhoto!.path,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.file(
+                                            File(_profilePhoto!.path),
+                                            fit: BoxFit.cover,
+                                          ))
+                                  : CustomPaint(painter: CheckerboardPainter()),
                             ),
                           ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: isLoading ? null : _changePhoto,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.sky50,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  AppIcons.edit,
+                                  size: 16,
+                                  color: AppColors.sky500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Username Input
+                    CustomInput(
+                      label: 'Username',
+                      hintText: 'Masukkan username',
+                      controller: _usernameController,
+                      readOnly: isLoading,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Username tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Nama Input
+                    CustomInput(
+                      label: 'Nama',
+                      hintText: 'Masukkan nama',
+                      controller: _nameController,
+                      readOnly: isLoading,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Nama tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Tanggal Lahir Field
+                    CustomInput(
+                      label: 'Tanggal Lahir',
+                      controller: _dobController,
+                      hintText: 'DD-MM-YYYY',
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Icon(
+                          AppIcons.calendar,
+                          color: AppColors.neutral300,
+                          size: 24,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
+                      readOnly: true,
+                      onTap: isLoading
+                          ? null
+                          : () async {
+                              DateTime initialDate = DateTime(2005, 12, 15);
+                              final dobText = _dobController.text;
+                              if (dobText.isNotEmpty) {
+                                try {
+                                  final parts = dobText.split('-');
+                                  if (parts.length == 3) {
+                                    if (parts[2].length == 4) {
+                                      initialDate = DateTime(
+                                        int.parse(parts[2]),
+                                        int.parse(parts[1]),
+                                        int.parse(parts[0]),
+                                      );
+                                    } else if (parts[0].length == 4) {
+                                      initialDate = DateTime(
+                                        int.parse(parts[0]),
+                                        int.parse(parts[1]),
+                                        int.parse(parts[2]),
+                                      );
+                                    }
+                                  }
+                                } catch (_) {}
+                              }
 
-                // Username Input
-                CustomInput(
-                  label: 'Username',
-                  hintText: 'Masukkan username',
-                  controller: _usernameController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Username tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Nama Input
-                CustomInput(
-                  label: 'Nama',
-                  hintText: 'Masukkan nama',
-                  controller: _nameController,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Tanggal Lahir Field
-                CustomInput(
-                  label: 'Tanggal Lahir',
-                  controller: _dobController,
-                  hintText: 'DD-MM-YYYY',
-                  suffixIcon: Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Icon(
-                      AppIcons.calendar,
-                      color: AppColors.neutral300,
-                      size: 24,
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: initialDate,
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                                builder: (context, child) {
+                                  return Theme(
+                                    data: Theme.of(context).copyWith(
+                                      colorScheme: const ColorScheme.light(
+                                        primary: AppColors.sky500,
+                                        onPrimary: Colors.white,
+                                        onSurface: AppColors.neutral900,
+                                      ),
+                                    ),
+                                    child: child!,
+                                  );
+                                },
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  final day = picked.day.toString().padLeft(
+                                    2,
+                                    '0',
+                                  );
+                                  final month = picked.month.toString().padLeft(
+                                    2,
+                                    '0',
+                                  );
+                                  _dobController.text =
+                                      '$day-$month-${picked.year}';
+                                });
+                              }
+                            },
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Tanggal lahir tidak boleh kosong';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime initialDate = DateTime(2005, 12, 15);
-                    final dobText = _dobController.text;
-                    if (dobText.isNotEmpty) {
-                      try {
-                        final parts = dobText.split('-');
-                        if (parts.length == 3) {
-                          if (parts[2].length == 4) {
-                            initialDate = DateTime(
-                              int.parse(parts[2]),
-                              int.parse(parts[1]),
-                              int.parse(parts[0]),
+                    const SizedBox(height: 20),
+
+                    // Code & Phone Number Fields (Side-by-side)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Kode
+                        SizedBox(
+                          width: 112,
+                          child: CustomInput(
+                            label: 'Kode',
+                            controller: _phoneCodeController,
+                            hintText: '+62',
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: Icon(
+                                AppIcons.chevronDown,
+                                color: AppColors.neutral950,
+                                size: 20,
+                              ),
+                            ),
+                            readOnly: true,
+                            onTap: isLoading ? null : _showCountryCodePicker,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Nomor Handphone
+                        Expanded(
+                          child: CustomInput(
+                            label: 'Nomor Handphone',
+                            controller: _phoneController,
+                            hintText: '8xxxxxxxxxx',
+                            keyboardType: TextInputType.phone,
+                            readOnly: isLoading,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Nomor handphone tidak boleh kosong';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Email Input
+                    CustomInput(
+                      label: 'Email',
+                      hintText: 'Masukkan email',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      readOnly: true,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Email tidak boleh kosong';
+                        }
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value.trim())) {
+                          return 'Format email tidak valid';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Buat Akun Button
+                    CustomButton(
+                      text: 'Buat Akun',
+                      size: CustomButtonSize.large,
+                      width: double.infinity,
+                      isLoading: isLoading,
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          // Format dob kembali ke yyyy-MM-dd untuk API secara aman
+                          String dobApi = '';
+                          final dobStr = _dobController.text;
+                          if (dobStr.isNotEmpty) {
+                            final parts = dobStr.split('-');
+                            if (parts.length == 3) {
+                              if (parts[0].length == 2) {
+                                dobApi = '${parts[2]}-${parts[1]}-${parts[0]}';
+                              } else {
+                                dobApi = dobStr;
+                              }
+                            }
+                          }
+
+                          final success = await _authBloc.setupProfile(
+                            phoneNumber: _phoneController.text,
+                            birthDate: dobApi,
+                            name: _nameController.text,
+                            username: _usernameController.text,
+                            phoneCode: _phoneCodeController.text,
+                            profilePhoto: _profilePhoto,
+                          );
+
+                          if (!context.mounted) return;
+
+                          if (success) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Akun berhasil dibuat!'),
+                                backgroundColor: AppColors.green500,
+                              ),
                             );
-                          } else if (parts[0].length == 4) {
-                            initialDate = DateTime(
-                              int.parse(parts[0]),
-                              int.parse(parts[1]),
-                              int.parse(parts[2]),
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MainScreen(),
+                              ),
+                              (route) => false,
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  _authBloc.errorMessage ??
+                                      'Gagal membuat akun.',
+                                ),
+                                backgroundColor: AppColors.red500,
+                              ),
                             );
                           }
                         }
-                      } catch (_) {}
-                    }
-
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: initialDate,
-                      firstDate: DateTime(1900),
-                      lastDate: DateTime.now(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: const ColorScheme.light(
-                              primary: AppColors.sky500,
-                              onPrimary: Colors.white,
-                              onSurface: AppColors.neutral900,
-                            ),
-                          ),
-                          child: child!,
-                        );
                       },
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        final day = picked.day.toString().padLeft(2, '0');
-                        final month = picked.month.toString().padLeft(2, '0');
-                        _dobController.text = '$day-$month-${picked.year}';
-                      });
-                    }
-                  },
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Tanggal lahir tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-
-                // Code & Phone Number Fields (Side-by-side)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Kode
-                    SizedBox(
-                      width: 112,
-                      child: CustomInput(
-                        label: 'Kode',
-                        controller: _phoneCodeController,
-                        hintText: '+62',
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: Icon(
-                            AppIcons.chevronDown,
-                            color: AppColors.neutral950,
-                            size: 20,
-                          ),
-                        ),
-                        readOnly: true,
-                        onTap: _showCountryCodePicker,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Nomor Handphone
-                    Expanded(
-                      child: CustomInput(
-                        label: 'Nomor Handphone',
-                        controller: _phoneController,
-                        hintText: '8xxxxxxxxxx',
-                        keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Nomor handphone tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-
-                // Email Input
-                CustomInput(
-                  label: 'Email',
-                  hintText: 'Masukkan email',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Email tidak boleh kosong';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value.trim())) {
-                      return 'Format email tidak valid';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 40),
-
-                // Buat Akun Button
-                CustomButton(
-                  text: 'Buat Akun',
-                  size: CustomButtonSize.large,
-                  width: double.infinity,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Akun berhasil dibuat!'),
-                          backgroundColor: AppColors.green500,
-                        ),
-                      );
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MainScreen(),
-                        ),
-                        (route) => false,
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -647,44 +723,4 @@ class CheckerboardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class CountryModel {
-  final String name;
-  final String code; // cca2
-  final String dialCode;
-  final String flagUrl;
-
-  CountryModel({
-    required this.name,
-    required this.code,
-    required this.dialCode,
-    required this.flagUrl,
-  });
-
-  factory CountryModel.fromJson(Map<String, dynamic> json) {
-    final nameMap = json['name'] as Map<String, dynamic>?;
-    final commonName = nameMap?['common'] as String? ?? '';
-    final cca2 = json['cca2'] as String? ?? '';
-
-    final idd = json['idd'] as Map<String, dynamic>?;
-    final root = idd?['root'] as String? ?? '';
-    final suffixes = idd?['suffixes'] as List<dynamic>? ?? [];
-    String dialCode = root;
-    if (root == '+1') {
-      dialCode = '+1';
-    } else if (suffixes.isNotEmpty) {
-      dialCode = '$root${suffixes[0]}';
-    }
-
-    final flags = json['flags'] as Map<String, dynamic>?;
-    final flagUrl = flags?['png'] as String? ?? '';
-
-    return CountryModel(
-      name: commonName,
-      code: cca2,
-      dialCode: dialCode,
-      flagUrl: flagUrl,
-    );
-  }
 }

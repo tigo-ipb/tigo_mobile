@@ -6,6 +6,7 @@ import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/input.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../blocs/profile_bloc.dart';
+import '../../models/country_model.dart';
 
 class AccountView extends StatefulWidget {
   const AccountView({super.key});
@@ -89,11 +90,14 @@ class _AccountViewState extends State<AccountView> {
       _countriesError = null;
     });
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://restcountries.com/v3.1/all?fields=name,idd,cca2,flags',
-        ),
-      );
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://restcountries.com/v3.1/all?fields=name,idd,cca2,flags',
+            ),
+          )
+          .timeout(const Duration(seconds: 4));
+
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final parsed = data.map((json) => CountryModel.fromJson(json)).toList();
@@ -111,12 +115,12 @@ class _AccountViewState extends State<AccountView> {
           });
         }
       } else {
-        throw Exception('Gagal memuat daftar negara.');
+        throw Exception('Gagal memuat.');
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _countriesError = 'Gagal memuat data negara. Silakan coba lagi.';
+          _countries = CountryModel.defaultCountries;
           _isLoadingCountries = false;
         });
       }
@@ -725,45 +729,5 @@ class _AccountViewState extends State<AccountView> {
 
   Widget _buildCard({required Widget child}) {
     return SizedBox(width: double.infinity, child: child);
-  }
-}
-
-class CountryModel {
-  final String name;
-  final String code; // cca2
-  final String dialCode;
-  final String flagUrl;
-
-  CountryModel({
-    required this.name,
-    required this.code,
-    required this.dialCode,
-    required this.flagUrl,
-  });
-
-  factory CountryModel.fromJson(Map<String, dynamic> json) {
-    final nameMap = json['name'] as Map<String, dynamic>?;
-    final commonName = nameMap?['common'] as String? ?? '';
-    final cca2 = json['cca2'] as String? ?? '';
-
-    final idd = json['idd'] as Map<String, dynamic>?;
-    final root = idd?['root'] as String? ?? '';
-    final suffixes = idd?['suffixes'] as List<dynamic>? ?? [];
-    String dialCode = root;
-    if (root == '+1') {
-      dialCode = '+1';
-    } else if (suffixes.isNotEmpty) {
-      dialCode = '$root${suffixes[0]}';
-    }
-
-    final flags = json['flags'] as Map<String, dynamic>?;
-    final flagUrl = flags?['png'] as String? ?? '';
-
-    return CountryModel(
-      name: commonName,
-      code: cca2,
-      dialCode: dialCode,
-      flagUrl: flagUrl,
-    );
   }
 }

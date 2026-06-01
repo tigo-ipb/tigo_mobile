@@ -6,7 +6,6 @@ import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
 import 'sign_up.dart';
 import 'verifikasi.dart';
-import 'setup_account.dart';
 import '../../../../main.dart';
 import '../../blocs/auth_bloc.dart';
 import 'dart:math' as math;
@@ -183,27 +182,14 @@ class _SignInViewState extends State<SignInView> {
                                   if (!context.mounted) return;
 
                                   if (success) {
-                                    final user = _authBloc.user;
-                                    if (user != null && user.isProfileSetup) {
-                                      Navigator.pushAndRemoveUntil(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const MainScreen(),
-                                        ),
-                                        (route) => false,
-                                      );
-                                    } else {
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              SetupAccountView(
-                                                role: widget.role,
-                                              ),
-                                        ),
-                                      );
-                                    }
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const MainScreen(),
+                                      ),
+                                      (route) => false,
+                                    );
                                   } else {
                                     final errorMessage =
                                         _authBloc.errorMessage ?? '';
