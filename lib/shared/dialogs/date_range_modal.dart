@@ -213,14 +213,17 @@ class _DateRangeModalState extends State<DateRangeModal> {
               const SizedBox(width: 8),
               CustomButton(
                 text: 'Simpan',
-                onPressed: (_startDate != null && _endDate != null)
+                onPressed: (_startDate != null)
                     ? () {
                         Navigator.pop(
                           context,
-                          DateTimeRange(start: _startDate!, end: _endDate!),
+                          DateTimeRange(
+                            start: _startDate!,
+                            end: _endDate ?? _startDate!,
+                          ),
                         );
                       }
-                    : null, // Disabled if range is incomplete
+                    : null,
                 size: CustomButtonSize.large,
               ),
             ],
@@ -430,7 +433,9 @@ class MonthCalendarWidget extends StatelessWidget {
                                 color: AppColors.sky100,
                                 margin: const EdgeInsets.symmetric(vertical: 3),
                               )
-                            else if (isStart && endDate != null)
+                            else if (isStart &&
+                                endDate != null &&
+                                !_isSameDay(startDate, endDate))
                               Row(
                                 children: [
                                   const Spacer(),
@@ -444,7 +449,9 @@ class MonthCalendarWidget extends StatelessWidget {
                                   ),
                                 ],
                               )
-                            else if (isEnd && startDate != null)
+                            else if (isEnd &&
+                                startDate != null &&
+                                !_isSameDay(startDate, endDate))
                               Row(
                                 children: [
                                   Expanded(

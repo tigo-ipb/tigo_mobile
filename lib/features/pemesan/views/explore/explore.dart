@@ -123,6 +123,68 @@ class _ExploreViewState extends State<ExploreView> {
     _applyAllFilters();
   }
 
+  DateTime? _parseScheduleDate(String schedule) {
+    final parsed = DateTime.tryParse(schedule);
+    if (parsed != null) return parsed;
+
+    try {
+      final clean = schedule.replaceAll(',', ' ').toLowerCase().trim();
+      final parts = clean.split(RegExp(r'\s+'));
+
+      int? day;
+      int? month;
+      int? year;
+
+      const months = {
+        'jan': 1,
+        'january': 1,
+        'feb': 2,
+        'february': 2,
+        'mar': 3,
+        'march': 3,
+        'apr': 4,
+        'april': 4,
+        'may': 5,
+        'jun': 6,
+        'june': 6,
+        'jul': 7,
+        'july': 7,
+        'aug': 8,
+        'august': 8,
+        'sep': 9,
+        'september': 9,
+        'oct': 10,
+        'october': 10,
+        'nov': 11,
+        'november': 11,
+        'dec': 12,
+        'december': 12,
+      };
+
+      for (final part in parts) {
+        if (months.containsKey(part)) {
+          month = months[part];
+        } else {
+          final val = int.tryParse(part);
+          if (val != null) {
+            if (part.length == 4) {
+              year = val;
+            } else if (val >= 1 && val <= 31) {
+              day = val;
+            }
+          }
+        }
+      }
+
+      if (year != null && month != null && day != null) {
+        return DateTime(year, month, day);
+      }
+    } catch (_) {
+      // Ignore and fallback
+    }
+    return null;
+  }
+
   List<EventModel> _getSortedEvents(List<EventModel> events) {
     final list = List<EventModel>.from(events);
 
@@ -137,8 +199,8 @@ class _ExploreViewState extends State<ExploreView> {
     if (dateSort == DateSortOption.terbaru ||
         dateSort == DateSortOption.terlama) {
       list.sort((a, b) {
-        final dateA = DateTime.tryParse(a.schedule) ?? DateTime(1970);
-        final dateB = DateTime.tryParse(b.schedule) ?? DateTime(1970);
+        final dateA = _parseScheduleDate(a.schedule) ?? DateTime(1970);
+        final dateB = _parseScheduleDate(b.schedule) ?? DateTime(1970);
         return dateSort == DateSortOption.terlama
             ? dateA.compareTo(dateB)
             : dateB.compareTo(dateA);
@@ -241,6 +303,9 @@ class _ExploreViewState extends State<ExploreView> {
                       onChanged: (val) {
                         setState(() {
                           priceSort = val;
+                          if (val != PriceSortOption.harga) {
+                            dateSort = DateSortOption.tanggal;
+                          }
                         });
                       },
                     ),
@@ -252,6 +317,9 @@ class _ExploreViewState extends State<ExploreView> {
                       onChanged: (val) {
                         setState(() {
                           dateSort = val;
+                          if (val != DateSortOption.tanggal) {
+                            priceSort = PriceSortOption.harga;
+                          }
                         });
                       },
                     ),

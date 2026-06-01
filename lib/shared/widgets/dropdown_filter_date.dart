@@ -49,32 +49,29 @@ class DropdownFilterDate extends StatelessWidget {
           ),
           color: Colors.white,
           itemBuilder: (context) {
-            return DateSortOption.values
-                .where((option) => option != DateSortOption.tanggal)
-                .map((option) {
-                  final isSelected = selectedOption == option;
-                  return PopupMenuItem<DateSortOption>(
-                    value: option,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          option.label,
-                          style: isSelected
-                              ? AppTextStyles.medium(12, AppColors.sky500)
-                              : AppTextStyles.regular(12, AppColors.neutral500),
-                        ),
-                        if (isSelected)
-                          const Icon(
-                            TablerIcons.check,
-                            size: 16,
-                            color: AppColors.sky500,
-                          ),
-                      ],
+            return DateSortOption.values.map((option) {
+              final isSelected = selectedOption == option;
+              return PopupMenuItem<DateSortOption>(
+                value: option,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      option.label,
+                      style: isSelected
+                          ? AppTextStyles.medium(12, AppColors.sky500)
+                          : AppTextStyles.regular(12, AppColors.neutral500),
                     ),
-                  );
-                })
-                .toList();
+                    if (isSelected)
+                      const Icon(
+                        TablerIcons.check,
+                        size: 16,
+                        color: AppColors.sky500,
+                      ),
+                  ],
+                ),
+              );
+            }).toList();
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
