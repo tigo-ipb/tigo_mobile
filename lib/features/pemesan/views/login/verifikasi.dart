@@ -69,14 +69,26 @@ class _VerificationViewState extends State<VerificationView> {
   }
 
   Future<void> _resendCode() async {
-    _startTimer();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Kode OTP berhasil dikirim ulang!'),
-        backgroundColor: AppColors.green500,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    final success = await _authBloc.resendOtp(email: widget.email);
+    if (!mounted) return;
+    if (success) {
+      _startTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Kode OTP berhasil dikirim ulang!'),
+          backgroundColor: AppColors.green500,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_authBloc.errorMessage ?? 'Gagal mengirim ulang OTP.'),
+          backgroundColor: AppColors.red500,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _verifyOtp() async {

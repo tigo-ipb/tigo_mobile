@@ -94,6 +94,17 @@ class AuthService {
   }
 
   // ---------------------------------------------------------------------------
+  // POST /auth/resend-otp
+  // ---------------------------------------------------------------------------
+  static Future<void> resendOtp({required String email}) async {
+    await ApiClient.post(
+      '/auth/resend-otp',
+      body: {'email': email},
+      withAuth: false,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
   // POST /auth/forgot-password
   // ---------------------------------------------------------------------------
   static Future<void> forgotPassword({required String login}) async {

@@ -102,6 +102,22 @@ class AuthBloc extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
+  // Resend OTP
+  // ---------------------------------------------------------------------------
+  Future<bool> resendOtp({required String email}) async {
+    _setLoading();
+    try {
+      await AuthService.resendOtp(email: email);
+      _status = AuthStatus.success;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _setError(e.message);
+      return false;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // Forgot Password
   // ---------------------------------------------------------------------------
   Future<bool> forgotPassword({required String login}) async {
