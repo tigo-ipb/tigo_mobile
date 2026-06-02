@@ -1,47 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
 import '../../blocs/auth_bloc.dart';
-import 'verifikasi.dart';
 
-class ForgetPasswordView extends StatefulWidget {
-  final String role;
+class ResetPasswordView extends StatefulWidget {
+  final String email;
+  final String otp;
 
-  const ForgetPasswordView({super.key, required this.role});
+  const ResetPasswordView({super.key, required this.email, required this.otp});
 
   @override
-  State<ForgetPasswordView> createState() => _ForgetPasswordViewState();
+  State<ResetPasswordView> createState() => _ResetPasswordViewState();
 }
 
-class _ForgetPasswordViewState extends State<ForgetPasswordView> {
+class _ResetPasswordViewState extends State<ResetPasswordView> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   late final AuthBloc _authBloc;
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isButtonEnabled = false;
 
   @override
   void initState() {
     super.initState();
     _authBloc = AuthBloc();
-    _emailController.addListener(_onEmailChanged);
+    _passwordController.addListener(_validateForm);
+    _confirmPasswordController.addListener(_validateForm);
   }
 
   @override
   void dispose() {
-    _emailController.removeListener(_onEmailChanged);
-    _emailController.dispose();
+    _passwordController.removeListener(_validateForm);
+    _confirmPasswordController.removeListener(_validateForm);
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _authBloc.dispose();
     super.dispose();
   }
 
-  void _onEmailChanged() {
-    final email = _emailController.text.trim();
+  void _validateForm() {
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
     final isValid =
-        email.isNotEmpty &&
-        RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+        password.isNotEmpty &&
+        password.length >= 6 &&
+        confirm.isNotEmpty &&
+        password == confirm;
     setState(() {
       _isButtonEnabled = isValid;
     });
@@ -50,35 +61,34 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final email = _emailController.text.trim();
-    final success = await _authBloc.forgotPassword(login: email);
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    final success = await _authBloc.resetPassword(
+      login: widget.email,
+      otp: widget.otp,
+      password: password,
+      passwordConfirmation: confirm,
+    );
 
     if (!mounted) return;
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Email konfirmasi reset password berhasil dikirim!'),
+          content: Text(
+            'Password Anda berhasil diubah! Silakan login kembali.',
+          ),
           backgroundColor: AppColors.green500,
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => VerificationView(
-            email: email,
-            role: widget.role,
-            isForgotPassword: true,
-          ),
-        ),
-      );
+      // Pushing back to login/sign in
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _authBloc.errorMessage ?? 'Gagal mengirim email reset password.',
-          ),
+          content: Text(_authBloc.errorMessage ?? 'Gagal mereset password.'),
           backgroundColor: AppColors.red500,
           behavior: SnackBarBehavior.floating,
         ),
@@ -117,7 +127,7 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Lupa Password',
+                              'Reset Password',
                               style: AppTextStyles.medium(
                                 16,
                                 AppColors.neutral950,
@@ -130,7 +140,7 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
                   ),
                 ),
 
-                // Main Form Content
+                // Scrollable Form Content
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -146,44 +156,72 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
                             // SVG Image
                             Center(
                               child: SvgPicture.asset(
-                                'lib/assets/amico.svg',
+                                'lib/assets/bro.svg',
                                 height: 240,
                                 fit: BoxFit.contain,
                               ),
                             ),
                             const SizedBox(height: 32),
 
-                            // Description Text
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0,
-                              ),
-                              child: Text(
-                                'Kamu akan dikirimkan email untuk konfirmasi reset password',
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.regular(
-                                  14,
-                                  AppColors.neutral950,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-
-                            // Email Input
+                            // New Password Input
                             CustomInput(
-                              label: 'Email',
-                              hintText: 'Masukkan email',
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
+                              label: 'Password Baru',
+                              hintText: 'Masukkan password baru',
+                              controller: _passwordController,
+                              obscureText: _obscurePassword,
                               readOnly: isLoading,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? TablerIcons.eyeOff
+                                      : TablerIcons.eye,
+                                  color: AppColors.neutral300,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
                               validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'Email tidak boleh kosong';
+                                if (value == null || value.isEmpty) {
+                                  return 'Password baru tidak boleh kosong';
                                 }
-                                if (!RegExp(
-                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                ).hasMatch(value.trim())) {
-                                  return 'Format email tidak valid';
+                                if (value.length < 6) {
+                                  return 'Password minimal harus 6 karakter';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Confirm Password Input
+                            CustomInput(
+                              label: 'Konfirmasi Password',
+                              hintText: 'Masukkan ulang password',
+                              controller: _confirmPasswordController,
+                              obscureText: _obscureConfirmPassword,
+                              readOnly: isLoading,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? TablerIcons.eyeOff
+                                      : TablerIcons.eye,
+                                  color: AppColors.neutral300,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
+                                  });
+                                },
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Konfirmasi password tidak boleh kosong';
+                                }
+                                if (value != _passwordController.text) {
+                                  return 'Konfirmasi password tidak sama';
                                 }
                                 return null;
                               },
@@ -200,7 +238,7 @@ class _ForgetPasswordViewState extends State<ForgetPasswordView> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
                   child: CustomButton(
-                    text: 'Kirim',
+                    text: 'Ganti',
                     size: CustomButtonSize.large,
                     width: double.infinity,
                     isLoading: isLoading,

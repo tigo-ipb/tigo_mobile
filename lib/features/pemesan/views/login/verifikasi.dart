@@ -5,12 +5,19 @@ import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../blocs/auth_bloc.dart';
 import 'setup_account.dart';
+import 'reset_password.dart';
 
 class VerificationView extends StatefulWidget {
   final String email;
   final String role;
+  final bool isForgotPassword;
 
-  const VerificationView({super.key, required this.email, required this.role});
+  const VerificationView({
+    super.key,
+    required this.email,
+    required this.role,
+    this.isForgotPassword = false,
+  });
 
   @override
   State<VerificationView> createState() => _VerificationViewState();
@@ -99,6 +106,17 @@ class _VerificationViewState extends State<VerificationView> {
           content: Text('Masukkan 6 digit kode verifikasi lengkap'),
           backgroundColor: AppColors.red500,
           behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (widget.isForgotPassword) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ResetPasswordView(email: widget.email, otp: otp),
         ),
       );
       return;
