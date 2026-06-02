@@ -33,68 +33,76 @@ class DropdownFilterDate extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return PopupMenuButton<DateSortOption>(
-          initialValue: selectedOption,
-          onSelected: onChanged,
-          offset: const Offset(0, 48),
-          elevation: 4,
-          shadowColor: Colors.black.withValues(alpha: 0.07),
-          constraints: BoxConstraints(
-            minWidth: constraints.maxWidth,
-            maxWidth: constraints.maxWidth,
+        return Theme(
+          data: Theme.of(context).copyWith(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            splashFactory: NoSplash.splashFactory,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: AppColors.neutral300),
-          ),
-          color: Colors.white,
-          itemBuilder: (context) {
-            return DateSortOption.values.map((option) {
-              final isSelected = selectedOption == option;
-              return PopupMenuItem<DateSortOption>(
-                value: option,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      option.label,
-                      style: isSelected
-                          ? AppTextStyles.medium(12, AppColors.sky500)
-                          : AppTextStyles.regular(12, AppColors.neutral500),
-                    ),
-                    if (isSelected)
-                      const Icon(
-                        TablerIcons.check,
-                        size: 16,
-                        color: AppColors.sky500,
-                      ),
-                  ],
-                ),
-              );
-            }).toList();
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.neutral300, width: 1),
+          child: PopupMenuButton<DateSortOption>(
+            initialValue: selectedOption,
+            onSelected: onChanged,
+            offset: const Offset(0, 48),
+            elevation: 4,
+            shadowColor: Colors.black.withValues(alpha: 0.07),
+            constraints: BoxConstraints(
+              minWidth: constraints.maxWidth,
+              maxWidth: constraints.maxWidth,
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  selectedOption.label,
-                  style: AppTextStyles.medium(12, AppColors.neutral950),
-                ),
-                Icon(
-                  TablerIcons.selector,
-                  size: 16,
-                  color: selectedOption == DateSortOption.tanggal
-                      ? AppColors.neutral400
-                      : AppColors.neutral950,
-                ),
-              ],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: const BorderSide(color: AppColors.neutral300),
+            ),
+            color: Colors.white,
+            itemBuilder: (context) {
+              return DateSortOption.values.map((option) {
+                final isSelected = selectedOption == option;
+                return PopupMenuItem<DateSortOption>(
+                  value: option,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        option.label,
+                        style: isSelected
+                            ? AppTextStyles.medium(12, AppColors.sky500)
+                            : AppTextStyles.regular(12, AppColors.neutral500),
+                      ),
+                      if (isSelected)
+                        const Icon(
+                          TablerIcons.check,
+                          size: 16,
+                          color: AppColors.sky500,
+                        ),
+                    ],
+                  ),
+                );
+              }).toList();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.neutral300, width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    selectedOption.label,
+                    style: AppTextStyles.medium(12, AppColors.neutral950),
+                  ),
+                  Icon(
+                    TablerIcons.selector,
+                    size: 16,
+                    color: selectedOption == DateSortOption.tanggal
+                        ? AppColors.neutral400
+                        : AppColors.neutral950,
+                  ),
+                ],
+              ),
             ),
           ),
         );
