@@ -4,6 +4,7 @@ import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
 import 'sign_up.dart';
@@ -37,9 +38,8 @@ class _SignInViewState extends State<SignInView> {
     super.initState();
     _authBloc = AuthBloc();
     _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb
-          ? 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
-          : null,
+      clientId: kIsWeb ? AppConstants.googleClientId : null,
+      serverClientId: AppConstants.googleClientId,
       scopes: const ['email', 'profile'],
     );
   }
