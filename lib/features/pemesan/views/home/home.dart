@@ -8,6 +8,7 @@ import '../../../../shared/widgets/searchbar.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../blocs/home_bloc.dart';
+import '../../models/event_model.dart';
 import '../explore/event_details.dart';
 
 class HomeView extends StatefulWidget {
@@ -196,8 +197,19 @@ class _HomeViewState extends State<HomeView> {
                       );
                     }
 
-                    final featured = _homeBloc.featuredEvents;
-                    final others = _homeBloc.otherEvents;
+                    List<EventModel> featured = List.from(
+                      _homeBloc.featuredEvents,
+                    );
+                    List<EventModel> others = List.from(_homeBloc.otherEvents);
+
+                    if (featured.length > 6) {
+                      final surplus = featured.sublist(6);
+                      featured = featured.sublist(0, 6);
+                      others.insertAll(0, surplus);
+                    } else if (others.isEmpty && featured.length > 2) {
+                      others = featured.sublist(2);
+                      featured = featured.sublist(0, 2);
+                    }
 
                     if (featured.isEmpty && others.isEmpty) {
                       return Center(
