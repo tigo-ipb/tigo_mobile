@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -13,6 +14,7 @@ import '../../models/event_detail_model.dart';
 import '../../models/country_model.dart';
 import '../../../../shared/dialogs/payment_success.dart';
 import '../../../../main.dart';
+import 'payment_webview.dart';
 
 class TicketIdentityView extends StatefulWidget {
   final EventDetailModel eventDetail;
@@ -505,11 +507,27 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
           result.paymentUrl == null) {
         _showSuccessDialog();
       } else {
-        final uri = Uri.tryParse(result.paymentUrl!);
-        if (uri != null && await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (kIsWeb) {
+          final uri = Uri.tryParse(result.paymentUrl!);
+          if (uri != null && await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.platformDefault);
+          }
+          if (mounted) {
+            _showSuccessDialog();
+          }
         } else {
-          _showSuccessDialog();
+          await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentWebView(
+                url: result.paymentUrl!,
+                title: 'Pembayaran Tiket',
+              ),
+            ),
+          );
+          if (mounted) {
+            _showSuccessDialog();
+          }
         }
       }
     } else {

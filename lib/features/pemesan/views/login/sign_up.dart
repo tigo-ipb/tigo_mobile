@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -8,6 +10,9 @@ import 'dart:math' as math;
 import '../../blocs/auth_bloc.dart';
 import 'verifikasi.dart';
 import 'forget_password.dart';
+import 'setup_account.dart';
+import '../../../../main.dart';
+import '../../../penyelenggara/views/dashboard/organizer_dashboard.dart';
 
 class SignUpView extends StatefulWidget {
   final String role;
@@ -25,11 +30,18 @@ class _SignUpViewState extends State<SignUpView> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   late final AuthBloc _authBloc;
+  late final GoogleSignIn _googleSignIn;
 
   @override
   void initState() {
     super.initState();
     _authBloc = AuthBloc();
+    _googleSignIn = GoogleSignIn(
+      clientId: kIsWeb
+          ? 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
+          : null,
+      scopes: const ['email', 'profile'],
+    );
   }
 
   @override
@@ -272,15 +284,110 @@ class _SignUpViewState extends State<SignUpView> {
                               textColor: AppColors.neutral900,
                               width: double.infinity,
                               leadingWidget: const GoogleIcon(size: 20),
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Lanjutkan dengan Google dipilih',
-                                    ),
-                                  ),
-                                );
-                              },
+                              isLoading: isLoading,
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      try {
+                                        final GoogleSignInAccount? googleUser =
+                                            await _googleSignIn.signIn();
+                                        if (googleUser == null) {
+                                          return;
+                                        }
+
+                                        final GoogleSignInAuthentication
+                                        googleAuth =
+                                            await googleUser.authentication;
+                                        final String? idToken =
+                                            googleAuth.idToken;
+
+                                        if (idToken == null) {
+                                          if (!context.mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Gagal mendapatkan token Google.',
+                                              ),
+                                              backgroundColor: AppColors.red500,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        final success = await _authBloc
+                                            .googleLogin(idToken: idToken);
+
+                                        if (!context.mounted) return;
+
+                                        if (success) {
+                                          if (_authBloc.status ==
+                                              AuthStatus.needsSetup) {
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SetupAccountView(
+                                                      role: widget.role,
+                                                      email:
+                                                          _authBloc.user?.email,
+                                                    ),
+                                              ),
+                                            );
+                                          } else {
+                                            if (widget.role == 'organizer') {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const OrganizerDashboard(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            } else {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const MainScreen(),
+                                                ),
+                                                (route) => false,
+                                              );
+                                            }
+                                          }
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                _authBloc.errorMessage ??
+                                                    'Gagal masuk dengan Google.',
+                                              ),
+                                              backgroundColor: AppColors.red500,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      } catch (error) {
+                                        if (!context.mounted) return;
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Error Google Sign-In: $error',
+                                            ),
+                                            backgroundColor: AppColors.red500,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    },
                             ),
                             const SizedBox(height: 48),
 

@@ -17,7 +17,7 @@ class HomeService {
       '/home',
       queryParams: params.isNotEmpty ? params : null,
       withAuth:
-          false, // Endpoint publik, tapi jika user login, backend akan personalisasi
+          true, // Endpoint publik, tapi jika user login, backend akan personalisasi
     );
 
     final data = res['data'] as Map<String, dynamic>? ?? {};
