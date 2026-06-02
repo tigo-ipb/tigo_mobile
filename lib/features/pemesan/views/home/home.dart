@@ -5,6 +5,7 @@ import '../../../../shared/widgets/events_cards/small.dart';
 import '../../../../shared/widgets/filter_tag.dart';
 import '../../../../shared/widgets/caraousel.dart';
 import '../../../../shared/widgets/searchbar.dart';
+import '../../../../shared/widgets/home_shimmer.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../blocs/home_bloc.dart';
@@ -76,6 +77,17 @@ class _HomeViewState extends State<HomeView> {
                 ListenableBuilder(
                   listenable: _homeBloc,
                   builder: (context, _) {
+                    if (_homeBloc.isLoading) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: SkeletonPlaceholder(
+                          width: double.infinity,
+                          height: 150,
+                          borderRadius: BorderRadius.all(Radius.circular(16)),
+                        ),
+                      );
+                    }
+
                     final carouselImages = _homeBloc.featuredEvents.isNotEmpty
                         ? _homeBloc.featuredEvents
                               .take(3)
@@ -144,14 +156,7 @@ class _HomeViewState extends State<HomeView> {
                   listenable: _homeBloc,
                   builder: (context, _) {
                     if (_homeBloc.isLoading) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 48),
-                          child: CircularProgressIndicator(
-                            color: AppColors.sky500,
-                          ),
-                        ),
-                      );
+                      return const HomeShimmer();
                     }
 
                     if (_homeBloc.status == HomeStatus.error) {
