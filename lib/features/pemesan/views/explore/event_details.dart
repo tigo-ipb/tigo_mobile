@@ -72,6 +72,17 @@ class _EventDetailsViewState extends State<EventDetailsView> {
     }
   }
 
+  String _formatTime(String timeStr) {
+    if (timeStr.isEmpty) return '';
+    try {
+      final parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        return '${parts[0]}.${parts[1]}';
+      }
+    } catch (_) {}
+    return timeStr;
+  }
+
   int _getLowestPrice(List<EventTicketTypeModel> ticketTypes) {
     if (ticketTypes.isEmpty) return 0;
     return ticketTypes
@@ -182,7 +193,7 @@ class _EventDetailsViewState extends State<EventDetailsView> {
           if (detail.schedules.isNotEmpty) {
             dateText = _formatDisplayDate(detail.schedules.first.date);
             timeText =
-                '${detail.schedules.first.startTime} - ${detail.schedules.first.endTime}';
+                '${_formatTime(detail.schedules.first.startTime)} - ${_formatTime(detail.schedules.first.endTime)}';
           }
           venueText = detail.location.venue;
           addressText = detail.location.address;

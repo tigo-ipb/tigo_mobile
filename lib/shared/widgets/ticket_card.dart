@@ -116,7 +116,7 @@ class TicketCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '$date • $time',
+                            time.isNotEmpty ? '$date • $time' : date,
                             style: AppTextStyles.regular(
                               12,
                               AppColors.neutral950,

@@ -7,10 +7,7 @@ import '../../blocs/ticket_bloc.dart';
 class TicketDetailsView extends StatefulWidget {
   final String paymentId;
 
-  const TicketDetailsView({
-    super.key,
-    required this.paymentId,
-  });
+  const TicketDetailsView({super.key, required this.paymentId});
 
   @override
   State<TicketDetailsView> createState() => _TicketDetailsViewState();
@@ -59,6 +56,46 @@ class _TicketDetailsViewState extends State<TicketDetailsView> {
     return 'Rp $formatted';
   }
 
+  String _formatDisplaySchedule(String? raw) {
+    if (raw == null || raw.isEmpty) return 'Tanggal TBA';
+    try {
+      final dt = DateTime.parse(raw).toLocal();
+      const days = [
+        'Senin',
+        'Selasa',
+        'Rabu',
+        'Kamis',
+        'Jumat',
+        'Sabtu',
+        'Minggu',
+      ];
+      const months = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+      final dayName = days[dt.weekday - 1];
+      final monthName = months[dt.month - 1];
+      final hour = dt.hour.toString().padLeft(2, '0');
+      final minute = dt.minute.toString().padLeft(2, '0');
+      if (raw.contains(':') || raw.contains('T') || raw.contains(' ')) {
+        return '$dayName, ${dt.day} $monthName ${dt.year} • $hour.$minute';
+      }
+      return '$dayName, ${dt.day} $monthName ${dt.year}';
+    } catch (_) {
+      return raw;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,9 +135,7 @@ class _TicketDetailsViewState extends State<TicketDetailsView> {
                 builder: (context, _) {
                   if (_ticketBloc.isLoading) {
                     return const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.sky500,
-                      ),
+                      child: CircularProgressIndicator(color: AppColors.sky500),
                     );
                   }
 
@@ -143,10 +178,7 @@ class _TicketDetailsViewState extends State<TicketDetailsView> {
                     return Center(
                       child: Text(
                         'Tiket tidak ditemukan.',
-                        style: AppTextStyles.regular(
-                          14,
-                          AppColors.neutral500,
-                        ),
+                        style: AppTextStyles.regular(14, AppColors.neutral500),
                       ),
                     );
                   }
@@ -233,8 +265,9 @@ class _TicketDetailsViewState extends State<TicketDetailsView> {
                               const SizedBox(height: 16),
                               _buildInfoRow(
                                 'Tanggal dan Jam',
-                                detail.eventDetails['schedule'] ??
-                                    'Tanggal TBA',
+                                _formatDisplaySchedule(
+                                  detail.eventDetails['schedule'],
+                                ),
                                 isTitle: true,
                               ),
                               const SizedBox(height: 16),

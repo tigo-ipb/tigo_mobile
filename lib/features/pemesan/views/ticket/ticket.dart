@@ -47,6 +47,49 @@ class _TicketViewState extends State<TicketView> {
         .toList();
   }
 
+  String _formatTicketDate(String? raw) {
+    if (raw == null || raw.isEmpty) return 'Tanggal TBA';
+    try {
+      final dt = DateTime.parse(raw).toLocal();
+      const days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+      const months = [
+        'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember',
+      ];
+      final dayName = days[dt.weekday - 1];
+      final monthName = months[dt.month - 1];
+      return '$dayName, ${dt.day} $monthName ${dt.year}';
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  String _formatTicketTime(String? raw) {
+    if (raw == null || raw.isEmpty) return '';
+    // Check if raw contains time info (contains ':' or 'T' or space)
+    if (!raw.contains(':') && !raw.contains('T') && !raw.contains(' ')) {
+      return '';
+    }
+    try {
+      final dt = DateTime.parse(raw).toLocal();
+      final hour = dt.hour.toString().padLeft(2, '0');
+      final minute = dt.minute.toString().padLeft(2, '0');
+      return '$hour.$minute';
+    } catch (_) {
+      return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,11 +206,12 @@ class _TicketViewState extends State<TicketView> {
                         return TicketCard(
                           title: ticket.eventName,
                           organizerName: ticket.organizerName,
-                          date: ticket.dateStart ?? 'Tanggal TBA',
-                          time: '',
+                          date: _formatTicketDate(ticket.dateStart),
+                          time: _formatTicketTime(ticket.dateStart),
                           location: ticket.venueName,
-                          imageUrl:
-                              AppConstants.resolveImageUrl(ticket.banner1x1),
+                          imageUrl: AppConstants.resolveImageUrl(
+                            ticket.banner1x1,
+                          ),
                           isHistory: _selectedTab == 1,
                           onTap: () {
                             Navigator.push(

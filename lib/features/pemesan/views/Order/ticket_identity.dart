@@ -84,16 +84,28 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
       if (!_isInitialized) {
         _nameController.text = user.name ?? '';
 
-        // Tanggal lahir: yyyy-MM-dd -> DD-MM-YYYY untuk UI
+        // Tanggal lahir: yyyy-MM-dd -> DD-MM-YYYY untuk UI secara aman
         if (user.birthDate != null && user.birthDate!.isNotEmpty) {
           try {
-            final parts = user.birthDate!.split('-');
-            if (parts.length == 3) {
-              if (parts[0].length == 4) {
-                _dobController.text = '${parts[2]}-${parts[1]}-${parts[0]}';
-              } else {
-                _dobController.text = user.birthDate!;
+            DateTime? parsedDate;
+            if (user.birthDate!.contains('-')) {
+              final parts = user.birthDate!.split('-');
+              if (parts.length == 3) {
+                if (parts[0].length == 4) {
+                  parsedDate = DateTime.tryParse(user.birthDate!);
+                } else if (parts[2].length == 4) {
+                  parsedDate = DateTime.tryParse(
+                    '${parts[2]}-${parts[1]}-${parts[0]}',
+                  );
+                }
               }
+            }
+            if (parsedDate != null) {
+              final day = parsedDate.day.toString().padLeft(2, '0');
+              final month = parsedDate.month.toString().padLeft(2, '0');
+              _dobController.text = '$day-$month-${parsedDate.year}';
+            } else {
+              _dobController.text = user.birthDate!;
             }
           } catch (_) {
             _dobController.text = user.birthDate!;
