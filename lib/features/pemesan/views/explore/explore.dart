@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import 'package:tigo_mobile/features/pemesan/views/explore/event_details.dart';
+import 'package:tigo_mobile/features/pemesan/views/explore/no_result_filter.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/events_cards/large.dart';
@@ -374,11 +375,8 @@ class _ExploreViewState extends State<ExploreView> {
                   final events = _getSortedEvents(_exploreBloc.events);
 
                   if (events.isEmpty) {
-                    return Center(
-                      child: Text(
-                        'Tidak ada event ditemukan.',
-                        style: AppTextStyles.regular(14, AppColors.neutral500),
-                      ),
+                    return NoResultFilter(
+                      isSearchMode: _searchController.text.trim().isNotEmpty,
                     );
                   }
 

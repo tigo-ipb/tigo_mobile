@@ -67,6 +67,7 @@ flutter:
   assets:
     - lib/assets/Logo Tigo.png
     - lib/assets/amico.svg
+    - lib/assets/amico_results.svg
     - lib/assets/bro.svg
 
   # To add assets to your application, add an assets section, like this:
