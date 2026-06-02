@@ -4,6 +4,7 @@ import '../../../../core/constants/app_icons.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/custom_button.dart';
+import '../../../../shared/widgets/home_shimmer.dart';
 import '../../../../shared/widgets/toast.dart';
 import '../../../../shared/dialogs/logout.dart';
 import '../../blocs/profile_bloc.dart';
@@ -48,9 +49,7 @@ class _ProfileViewState extends State<ProfileView> {
             listenable: _profileBloc,
             builder: (context, _) {
               if (_profileBloc.isLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.sky500),
-                );
+                return const ProfileShimmer();
               }
 
               if (_profileBloc.status == ProfileStatus.error) {

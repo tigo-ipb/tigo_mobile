@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../shared/dialogs/logout.dart';
+import '../../../../shared/widgets/home_shimmer.dart';
 import '../../../pemesan/views/login/role.dart';
 import '../../models/organizer_dashboard_model.dart';
 import '../../services/organizer_service.dart';
@@ -60,13 +61,23 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
   // Handle scanned/entered ticket verification
   Future<void> _validateTicket(String code) async {
     if (code.trim().isEmpty) return;
+    if (_dashboardData == null) {
+      setState(() {
+        _showScanError = true;
+        _scanErrorMessage = 'Data dashboard belum dimuat.';
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final res = await OrganizerService.scanTicket(qrCodeString: code);
+      final res = await OrganizerService.scanTicket(
+        eventId: _dashboardData!.eventId,
+        qrCodeString: code,
+      );
       final status = res['status'] as String? ?? 'SUCCESS';
       final reason = res['reason'] as String? ?? 'Scan Berhasil';
 
@@ -124,21 +135,17 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
           children: [
             // Sub-screen 1: Dashboard View
             _isLoading && _dashboardData == null
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.sky500),
-                    ),
-                  )
+                ? const OrganizerDashboardShimmer()
                 : _errorMessage != null && _dashboardData == null
-                    ? _buildErrorScreen()
-                    : RefreshIndicator(
-                        onRefresh: () => _loadDashboardData(silent: true),
-                        color: AppColors.sky500,
-                        child: OrganizerDashboardView(
-                          dashboardData: _dashboardData!,
-                          isLoading: _isLoading,
-                        ),
-                      ),
+                ? _buildErrorScreen()
+                : RefreshIndicator(
+                    onRefresh: () => _loadDashboardData(silent: true),
+                    color: AppColors.sky500,
+                    child: OrganizerDashboardView(
+                      dashboardData: _dashboardData!,
+                      isLoading: _isLoading,
+                    ),
+                  ),
             // Sub-screen 2: Scan View
             OrganizerScanView(
               showScanError: _showScanError,
@@ -194,12 +201,12 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
-              child: Text(
-                'Coba Lagi',
-                style: AppTextStyles.semiBold(14),
-              ),
+              child: Text('Coba Lagi', style: AppTextStyles.semiBold(14)),
             ),
           ],
         ),
@@ -244,7 +251,9 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
                 children: [
                   Icon(
                     TablerIcons.layoutDashboard,
-                    color: _currentIndex == 0 ? AppColors.sky500 : AppColors.neutral400,
+                    color: _currentIndex == 0
+                        ? AppColors.sky500
+                        : AppColors.neutral400,
                     size: 28,
                   ),
                   const SizedBox(height: 4),
@@ -252,7 +261,9 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
                     'Dashboard',
                     style: AppTextStyles.medium(
                       12,
-                      _currentIndex == 0 ? AppColors.sky500 : AppColors.neutral400,
+                      _currentIndex == 0
+                          ? AppColors.sky500
+                          : AppColors.neutral400,
                     ),
                   ),
                 ],

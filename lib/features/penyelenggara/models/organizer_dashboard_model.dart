@@ -57,6 +57,7 @@ class OrganizerRecentScan {
 }
 
 class OrganizerDashboardModel {
+  final String eventId;
   final String eventName;
   final int totalScanned;
   final int totalSold;
@@ -64,6 +65,7 @@ class OrganizerDashboardModel {
   final List<OrganizerRecentScan> recentScans;
 
   OrganizerDashboardModel({
+    required this.eventId,
     required this.eventName,
     required this.totalScanned,
     required this.totalSold,
@@ -74,6 +76,7 @@ class OrganizerDashboardModel {
   factory OrganizerDashboardModel.fromJson(Map<String, dynamic> json) {
     final summary = json['summary'] as Map<String, dynamic>? ?? {};
     return OrganizerDashboardModel(
+      eventId: json['event_id'] ?? '',
       eventName: json['event_name'] ?? '',
       totalScanned: (summary['total_scanned'] ?? 0) is int
           ? summary['total_scanned']

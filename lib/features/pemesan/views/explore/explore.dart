@@ -6,6 +6,7 @@ import 'package:tigo_mobile/features/pemesan/views/explore/no_result_filter.dart
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/widgets/events_cards/large.dart';
+import '../../../../shared/widgets/home_shimmer.dart';
 import '../../../../shared/widgets/searchbar.dart';
 import '../../../../shared/dialogs/filter_sheet.dart';
 import '../../../../shared/widgets/filter_tag.dart';
@@ -337,9 +338,7 @@ class _ExploreViewState extends State<ExploreView> {
                 listenable: _exploreBloc,
                 builder: (context, _) {
                   if (_exploreBloc.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: AppColors.sky500),
-                    );
+                    return const ExploreShimmer();
                   }
 
                   if (_exploreBloc.status == ExploreStatus.error) {
