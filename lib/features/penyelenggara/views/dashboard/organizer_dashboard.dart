@@ -26,6 +26,10 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
   String? _errorMessage;
   OrganizerDashboardModel? _dashboardData;
 
+  // Selected Event State for Scanning
+  String? _selectedEventId;
+  String? _selectedEventName;
+
   @override
   void initState() {
     super.initState();
@@ -60,13 +64,28 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
   // Handle scanned/entered ticket verification
   Future<void> _validateTicket(String code) async {
     if (code.trim().isEmpty) return;
+    if (_selectedEventId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Pilih event terlebih dahulu.'),
+            backgroundColor: AppColors.red500,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final res = await OrganizerService.scanTicket(qrCodeString: code);
+      final res = await OrganizerService.scanTicket(
+        qrCodeString: code,
+        eventId: _selectedEventId!,
+      );
       final status = res['status'] as String? ?? 'SUCCESS';
       final reason = res['reason'] as String? ?? 'Scan Berhasil';
 
@@ -143,6 +162,14 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
             OrganizerScanView(
               showScanError: _showScanError,
               scanErrorMessage: _scanErrorMessage,
+              selectedEventId: _selectedEventId,
+              selectedEventName: _selectedEventName,
+              onEventSelected: (id, name) {
+                setState(() {
+                  _selectedEventId = id;
+                  _selectedEventName = name;
+                });
+              },
               onBack: () {
                 setState(() {
                   _currentIndex = 0;

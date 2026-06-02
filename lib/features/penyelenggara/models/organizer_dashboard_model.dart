@@ -73,6 +73,27 @@ class OrganizerDashboardModel {
 
   factory OrganizerDashboardModel.fromJson(Map<String, dynamic> json) {
     final summary = json['summary'] as Map<String, dynamic>? ?? {};
+    
+    final rawBreakdown = json['breakdown'];
+    final List<OrganizerTicketBreakdown> breakdownList = [];
+    if (rawBreakdown is List) {
+      for (var e in rawBreakdown) {
+        if (e is Map) {
+          breakdownList.add(OrganizerTicketBreakdown.fromJson(Map<String, dynamic>.from(e)));
+        }
+      }
+    }
+
+    final rawRecent = json['recent_scans'];
+    final List<OrganizerRecentScan> recentList = [];
+    if (rawRecent is List) {
+      for (var e in rawRecent) {
+        if (e is Map) {
+          recentList.add(OrganizerRecentScan.fromJson(Map<String, dynamic>.from(e)));
+        }
+      }
+    }
+
     return OrganizerDashboardModel(
       eventName: json['event_name'] ?? '',
       totalScanned: (summary['total_scanned'] ?? 0) is int
@@ -81,12 +102,8 @@ class OrganizerDashboardModel {
       totalSold: (summary['total_sold'] ?? 0) is int
           ? summary['total_sold']
           : (summary['total_sold'] as num).toInt(),
-      breakdown: (json['breakdown'] as List? ?? [])
-          .map((e) => OrganizerTicketBreakdown.fromJson(e))
-          .toList(),
-      recentScans: (json['recent_scans'] as List? ?? [])
-          .map((e) => OrganizerRecentScan.fromJson(e))
-          .toList(),
+      breakdown: breakdownList,
+      recentScans: recentList,
     );
   }
 }
