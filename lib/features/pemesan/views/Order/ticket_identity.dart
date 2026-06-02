@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
@@ -8,6 +10,7 @@ import '../../../../shared/widgets/input.dart';
 import '../../blocs/checkout_bloc.dart';
 import '../../blocs/profile_bloc.dart';
 import '../../models/event_detail_model.dart';
+import '../../models/country_model.dart';
 import '../../../../shared/dialogs/payment_success.dart';
 import '../../../../main.dart';
 
@@ -40,6 +43,11 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
 
   bool _isAgreed = false;
 
+  // Countries code API state
+  List<CountryModel> _countries = [];
+  bool _isLoadingCountries = false;
+  String? _countriesError;
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +62,7 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
 
     _profileBloc.addListener(_onProfileBlocChanged);
     _profileBloc.fetchProfile();
+    _fetchCountries();
   }
 
   @override
@@ -126,6 +135,50 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
 
   void _updateFormState() {
     setState(() {});
+  }
+
+  Future<void> _fetchCountries() async {
+    if (_countries.isNotEmpty) return;
+    setState(() {
+      _isLoadingCountries = true;
+      _countriesError = null;
+    });
+    try {
+      final response = await http
+          .get(
+            Uri.parse(
+              'https://restcountries.com/v3.1/all?fields=name,idd,cca2,flags',
+            ),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final parsed = data.map((json) => CountryModel.fromJson(json)).toList();
+
+        // Sort alphabetically
+        parsed.sort((a, b) => a.name.compareTo(b.name));
+
+        // Filter out empty dialCode
+        parsed.removeWhere((c) => c.dialCode.isEmpty);
+
+        if (mounted) {
+          setState(() {
+            _countries = parsed;
+            _isLoadingCountries = false;
+          });
+        }
+      } else {
+        throw Exception('Gagal memuat.');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _countries = CountryModel.defaultCountries;
+          _isLoadingCountries = false;
+        });
+      }
+    }
   }
 
   bool get _isFormValid {
@@ -210,42 +263,206 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
   }
 
   void _showCountryCodePicker() {
+    _fetchCountries();
+
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Colors.white,
-      builder: (ctx) {
-        final codes = ['+62', '+00', '+1', '+60'];
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'Pilih Kode Negara',
-                  style: AppTextStyles.medium(16, AppColors.neutral950),
-                ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        String searchQuery = '';
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final double screenHeight = MediaQuery.of(context).size.height;
+
+            final displayedCountries = _countries.where((c) {
+              final term = searchQuery.toLowerCase();
+              return c.name.toLowerCase().contains(term) ||
+                  c.dialCode.contains(term) ||
+                  c.code.toLowerCase().contains(term);
+            }).toList();
+
+            return Container(
+              height: screenHeight * 0.75,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              const Divider(color: AppColors.neutral200, height: 1),
-              ...codes.map((code) {
-                return ListTile(
-                  title: Center(
-                    child: Text(
-                      code,
-                      style: AppTextStyles.regular(16, AppColors.neutral950),
+              child: Column(
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.neutral200,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
                   ),
-                  onTap: () {
-                    _phoneCodeController.text = code;
-                    Navigator.pop(ctx);
-                  },
-                );
-              }),
-            ],
-          ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Pilih Kode Negara',
+                          style: AppTextStyles.semiBold(
+                            18,
+                            AppColors.neutral950,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: Icon(
+                            AppIcons.close,
+                            color: AppColors.neutral500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    child: TextField(
+                      onChanged: (val) {
+                        setModalState(() {
+                          searchQuery = val;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Cari negara...',
+                        hintStyle: AppTextStyles.regular(
+                          14,
+                          AppColors.neutral400,
+                        ),
+                        prefixIcon: Icon(
+                          AppIcons.search,
+                          color: AppColors.neutral400,
+                          size: 20,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.neutral50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: _isLoadingCountries
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.sky500,
+                            ),
+                          )
+                        : _countriesError != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _countriesError!,
+                                    style: AppTextStyles.regular(
+                                      14,
+                                      AppColors.red500,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CustomButton(
+                                    text: 'Coba Lagi',
+                                    size: CustomButtonSize.medium,
+                                    onPressed: () async {
+                                      setModalState(() {
+                                        _isLoadingCountries = true;
+                                        _countriesError = null;
+                                      });
+                                      await _fetchCountries();
+                                      setModalState(() {});
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : displayedCountries.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Negara tidak ditemukan',
+                              style: AppTextStyles.regular(
+                                14,
+                                AppColors.neutral50,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: displayedCountries.length,
+                            itemBuilder: (context, index) {
+                              final country = displayedCountries[index];
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                leading: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Image.network(
+                                    country.flagUrl,
+                                    width: 32,
+                                    height: 20,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            Container(
+                                              width: 32,
+                                              height: 20,
+                                              color: AppColors.neutral200,
+                                              child: const Icon(
+                                                Icons.flag,
+                                                size: 14,
+                                              ),
+                                            ),
+                                  ),
+                                ),
+                                title: Text(
+                                  country.name,
+                                  style: AppTextStyles.medium(
+                                    16,
+                                    AppColors.neutral950,
+                                  ),
+                                ),
+                                trailing: Text(
+                                  country.dialCode,
+                                  style: AppTextStyles.semiBold(
+                                    16,
+                                    AppColors.neutral500,
+                                  ),
+                                ),
+                                onTap: () {
+                                  _phoneCodeController.text = country.dialCode;
+                                  Navigator.pop(context);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
