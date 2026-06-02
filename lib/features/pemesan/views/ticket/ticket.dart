@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/home_shimmer.dart';
 import '../../../../shared/widgets/searchbar.dart';
 import '../../../../shared/widgets/ticket_card.dart';
 import '../../../../core/constants/app_theme.dart';
@@ -129,11 +130,7 @@ class _TicketViewState extends State<TicketView> {
                   listenable: _ticketBloc,
                   builder: (context, _) {
                     if (_ticketBloc.isLoading) {
-                      return const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.sky500,
-                        ),
-                      );
+                      return const TicketShimmer();
                     }
 
                     if (_ticketBloc.status == TicketStatus.error) {

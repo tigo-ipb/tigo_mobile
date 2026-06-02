@@ -25,15 +25,13 @@ class OrganizerService {
   ///
   /// Validasi scan ticket untuk organizer.
   static Future<Map<String, dynamic>> scanTicket({
+    required String eventId,
     required String qrCodeString,
     required String eventId,
   }) async {
     final res = await ApiClient.post(
       '/organizer/scan',
-      body: {
-        'qr_code_string': qrCodeString,
-        'event_id': eventId,
-      },
+      body: {'qr_code_string': qrCodeString, 'event_id': eventId},
     );
     return res['data'] as Map<String, dynamic>? ?? {};
   }
