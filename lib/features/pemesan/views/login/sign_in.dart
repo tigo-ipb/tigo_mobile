@@ -6,6 +6,7 @@ import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
 import 'sign_up.dart';
 import 'verifikasi.dart';
+import 'forget_password.dart';
 import '../../../../main.dart';
 import '../../blocs/auth_bloc.dart';
 import 'dart:math' as math;
@@ -311,7 +312,15 @@ class _SignInViewState extends State<SignInView> {
                                       ),
                                       GestureDetector(
                                         onTap: () {
-                                          // Navigate to Forgot Password View
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ForgetPasswordView(
+                                                    role: widget.role,
+                                                  ),
+                                            ),
+                                          );
                                         },
                                         child: Text(
                                           'Klik di sini',
