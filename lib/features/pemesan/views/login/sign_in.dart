@@ -10,6 +10,7 @@ import 'forget_password.dart';
 import '../../../../main.dart';
 import '../../blocs/auth_bloc.dart';
 import 'dart:math' as math;
+import '../../../penyelenggara/views/dashboard/organizer_dashboard.dart';
 
 class SignInView extends StatefulWidget {
   final String role;
@@ -183,14 +184,26 @@ class _SignInViewState extends State<SignInView> {
                                   if (!context.mounted) return;
 
                                   if (success) {
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const MainScreen(),
-                                      ),
-                                      (route) => false,
-                                    );
+                                    // Cek apakah user login sebagai organizer atau customer
+                                    if (widget.role == 'organizer') {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const OrganizerDashboard(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const MainScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
                                   } else {
                                     final errorMessage =
                                         _authBloc.errorMessage ?? '';

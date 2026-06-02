@@ -14,8 +14,8 @@ class EventScheduleModel {
   factory EventScheduleModel.fromJson(Map<String, dynamic> json) {
     return EventScheduleModel(
       date: json['date'] ?? '',
-      startTime: json['start_time'] ?? '',
-      endTime: json['end_time'] ?? '',
+      startTime: json['time_start'] ?? '',
+      endTime: json['time_end'] ?? '',
     );
   }
 }
@@ -61,13 +61,13 @@ class EventTicketTypeModel {
       typeName: json['type_name'] ?? '',
       price: json['price'] != null
           ? (json['price'] is int
-              ? json['price'] as int
-              : (json['price'] as num).toInt())
+                ? json['price'] as int
+                : (json['price'] as num).toInt())
           : 0,
       availableStock: json['available_stock'] != null
           ? (json['available_stock'] is int
-              ? json['available_stock'] as int
-              : (json['available_stock'] as num).toInt())
+                ? json['available_stock'] as int
+                : (json['available_stock'] as num).toInt())
           : 0,
       description: json['description'] ?? '',
     );
