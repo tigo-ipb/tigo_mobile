@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "277776112532",
+    "project_id": "tigo-mobile",
+    "storage_bucket": "tigo-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:277776112532:android:4096e08838bc006278cd81",
+        "android_client_info": {
+          "package_name": "com.company.tigo_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQujPUWev9-nRijbygWjzxIYX-uV4Vo2c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
