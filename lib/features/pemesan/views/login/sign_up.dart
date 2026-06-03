@@ -39,13 +39,13 @@ class _SignUpViewState extends State<SignUpView> {
     _authBloc = AuthBloc();
     _googleSignIn = GoogleSignIn(
       // clientId WAJIB diisi
-      clientId:
-          '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
-
-      // Kuncinya ada di sini: Jika Web, set null. Jika Android/iOS, baru isi dengan Client ID.
+      clientId: kIsWeb
+          ? '215018091868-ao9di7709r6grl6nv1ganlmqa9jgenas.apps.googleusercontent.com'
+          : null,
+      // serverClientId di-set null khusus jika berjalan di Web (kIsWeb)
       serverClientId: kIsWeb
-          ? null
-          : '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
+          ? '215018091868-ao9di7709r6grl6nv1ganlmqa9jgenas.apps.googleusercontent.com'
+          : null,
 
       scopes: const ['email', 'profile'],
     );
