@@ -50,7 +50,9 @@ class OrganizerDashboardView extends StatelessWidget {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.sky500),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.sky500,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -81,16 +83,7 @@ class OrganizerDashboardView extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.neutral200.withValues(alpha: 0.5),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: AppColors.neutral300),
           ),
           child: Column(
             children: dashboardData.breakdown.isEmpty
@@ -98,27 +91,29 @@ class OrganizerDashboardView extends StatelessWidget {
                     Text(
                       'Belum ada data breakdown tiket.',
                       style: AppTextStyles.regular(14, AppColors.neutral400),
-                    )
+                    ),
                   ]
-                : List.generate(
-                    dashboardData.breakdown.length,
-                    (index) {
-                      final item = dashboardData.breakdown[index];
-                      // Unscanned count is sold - scanned
-                      final remaining = (item.sold - item.scanned).clamp(0, item.sold);
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index == dashboardData.breakdown.length - 1 ? 0.0 : 16.0,
-                        ),
-                        child: _buildProgressBarRow(
-                          item.typeName,
-                          item.scanned,
-                          remaining,
-                          item.sold,
-                        ),
-                      );
-                    },
-                  ),
+                : List.generate(dashboardData.breakdown.length, (index) {
+                    final item = dashboardData.breakdown[index];
+                    // Unscanned count is sold - scanned
+                    final remaining = (item.sold - item.scanned).clamp(
+                      0,
+                      item.sold,
+                    );
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == dashboardData.breakdown.length - 1
+                            ? 0.0
+                            : 16.0,
+                      ),
+                      child: _buildProgressBarRow(
+                        item.typeName,
+                        item.scanned,
+                        remaining,
+                        item.sold,
+                      ),
+                    );
+                  }),
           ),
         ),
         const SizedBox(height: 32),
@@ -135,16 +130,7 @@ class OrganizerDashboardView extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: AppColors.neutral200.withValues(alpha: 0.5),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: AppColors.neutral300),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Column(
@@ -155,26 +141,21 @@ class OrganizerDashboardView extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 4,
                       child: Text(
                         'Order ID',
                         style: AppTextStyles.semiBold(14, AppColors.sky500),
                       ),
                     ),
                     Expanded(
-                      flex: 3,
                       child: Text(
                         'Waktu',
                         style: AppTextStyles.semiBold(14, AppColors.sky500),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                     Expanded(
-                      flex: 4,
                       child: Text(
                         'Event',
                         style: AppTextStyles.semiBold(14, AppColors.sky500),
-                        textAlign: TextAlign.right,
                       ),
                     ),
                   ],
@@ -195,8 +176,10 @@ class OrganizerDashboardView extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: dashboardData.recentScans.length,
-                      separatorBuilder: (context, index) =>
-                          const Divider(color: AppColors.neutral100, height: 16),
+                      separatorBuilder: (context, index) => const Divider(
+                        color: AppColors.neutral100,
+                        height: 16,
+                      ),
                       itemBuilder: (context, index) {
                         final item = dashboardData.recentScans[index];
                         final isFailed = item.status.toUpperCase() == 'FAILED';
@@ -219,7 +202,6 @@ class OrganizerDashboardView extends StatelessWidget {
                             children: [
                               // Column 1: Order ID & Name (with dynamic fail styling)
                               Expanded(
-                                flex: 4,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -238,7 +220,9 @@ class OrganizerDashboardView extends StatelessWidget {
                                             item.orderId,
                                             style: AppTextStyles.regular(
                                               12,
-                                              isFailed ? AppColors.red400 : AppColors.neutral400,
+                                              isFailed
+                                                  ? AppColors.red400
+                                                  : AppColors.neutral400,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -251,7 +235,9 @@ class OrganizerDashboardView extends StatelessWidget {
                                       item.buyerName,
                                       style: AppTextStyles.medium(
                                         14,
-                                        isFailed ? AppColors.red700 : AppColors.neutral900,
+                                        isFailed
+                                            ? AppColors.red700
+                                            : AppColors.neutral900,
                                       ),
                                     ),
                                     if (isFailed && item.reason.isNotEmpty) ...[
@@ -270,15 +256,16 @@ class OrganizerDashboardView extends StatelessWidget {
 
                               // Column 2: Date & Time
                               Expanded(
-                                flex: 3,
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       date,
                                       style: AppTextStyles.regular(
                                         12,
-                                        isFailed ? AppColors.red400 : AppColors.neutral400,
+                                        isFailed
+                                            ? AppColors.red400
+                                            : AppColors.neutral400,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -286,7 +273,9 @@ class OrganizerDashboardView extends StatelessWidget {
                                       time,
                                       style: AppTextStyles.medium(
                                         14,
-                                        isFailed ? AppColors.red700 : AppColors.neutral900,
+                                        isFailed
+                                            ? AppColors.red700
+                                            : AppColors.neutral900,
                                       ),
                                     ),
                                   ],
@@ -295,17 +284,17 @@ class OrganizerDashboardView extends StatelessWidget {
 
                               // Column 3: Event & Category
                               Expanded(
-                                flex: 4,
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       item.eventName,
                                       style: AppTextStyles.semiBold(
                                         14,
-                                        isFailed ? AppColors.red700 : AppColors.neutral900,
+                                        isFailed
+                                            ? AppColors.red700
+                                            : AppColors.neutral900,
                                       ),
-                                      textAlign: TextAlign.right,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -314,9 +303,10 @@ class OrganizerDashboardView extends StatelessWidget {
                                       item.category,
                                       style: AppTextStyles.regular(
                                         12,
-                                        isFailed ? AppColors.red400 : AppColors.neutral400,
+                                        isFailed
+                                            ? AppColors.red400
+                                            : AppColors.neutral400,
                                       ),
-                                      textAlign: TextAlign.right,
                                     ),
                                   ],
                                 ),
@@ -333,7 +323,12 @@ class OrganizerDashboardView extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressBarRow(String label, int value, int remaining, int total) {
+  Widget _buildProgressBarRow(
+    String label,
+    int value,
+    int remaining,
+    int total,
+  ) {
     final double percentage = total > 0 ? (value / total) : 0.0;
 
     return Row(

@@ -137,7 +137,7 @@ class _OrganizerDashboardState extends State<OrganizerDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.neutral50,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: IndexedStack(
           index: _currentIndex,
