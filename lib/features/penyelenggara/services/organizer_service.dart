@@ -27,7 +27,6 @@ class OrganizerService {
   static Future<Map<String, dynamic>> scanTicket({
     required String eventId,
     required String qrCodeString,
-    required String eventId,
   }) async {
     final res = await ApiClient.post(
       '/organizer/scan',
