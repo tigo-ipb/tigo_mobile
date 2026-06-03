@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -8,6 +9,7 @@ import '../../../../core/constants/app_theme.dart';
 import '../../../../core/constants/app_icons.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/input.dart';
+import '../../../../shared/dialogs/terms_privacy_dialog.dart';
 import '../../blocs/checkout_bloc.dart';
 import '../../blocs/profile_bloc.dart';
 import '../../models/event_detail_model.dart';
@@ -44,6 +46,7 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
   final _emailController = TextEditingController();
 
   bool _isAgreed = false;
+  late final TapGestureRecognizer _termsRecognizer;
 
   // Countries code API state
   List<CountryModel> _countries = [];
@@ -65,6 +68,11 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
     _profileBloc.addListener(_onProfileBlocChanged);
     _profileBloc.fetchProfile();
     _fetchCountries();
+    _termsRecognizer = TapGestureRecognizer()..onTap = _showTermsPrivacyDialog;
+  }
+
+  void _showTermsPrivacyDialog() {
+    TermsPrivacyDialog.show(context);
   }
 
   @override
@@ -84,6 +92,7 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
     _phoneCodeController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _termsRecognizer.dispose();
     super.dispose();
   }
 
@@ -797,6 +806,7 @@ class _TicketIdentityViewState extends State<TicketIdentityView> {
                                                   decoration:
                                                       TextDecoration.underline,
                                                 ),
+                                            recognizer: _termsRecognizer,
                                           ),
                                         ],
                                       ),
