@@ -48,6 +48,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -69,6 +70,7 @@ flutter:
 
   assets:
     - lib/assets/Logo Tigo.png
+    - lib/assets/Icon Tigo.png
     - lib/assets/amico.svg
     - lib/assets/amico_results.svg
     - lib/assets/bro.svg
@@ -103,3 +105,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "lib/assets/Icon Tigo.png"
+
