@@ -38,8 +38,12 @@ class _SignInViewState extends State<SignInView> {
     super.initState();
     _authBloc = AuthBloc();
     _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb ? AppConstants.googleClientId : null,
-      serverClientId: AppConstants.googleClientId,
+      clientId:
+          '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
+      // serverClientId di-set null khusus jika berjalan di Web (kIsWeb)
+      serverClientId: kIsWeb
+          ? null
+          : '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
       scopes: const ['email', 'profile'],
     );
   }
@@ -311,6 +315,13 @@ class _SignInViewState extends State<SignInView> {
                                   ? null
                                   : () async {
                                       try {
+                                        try {
+                                          await _googleSignIn.disconnect();
+                                        } catch (
+                                          _
+                                        ) {} // Abaikan jika belum pernah login
+
+                                        // await _googleSignIn.signOut();
                                         final GoogleSignInAccount? googleUser =
                                             await _googleSignIn.signIn();
                                         if (googleUser == null) {
@@ -320,28 +331,39 @@ class _SignInViewState extends State<SignInView> {
                                         final GoogleSignInAuthentication
                                         googleAuth =
                                             await googleUser.authentication;
+
                                         final String? idToken =
                                             googleAuth.idToken;
+                                        final String? accessToken =
+                                            googleAuth.accessToken;
 
-                                        if (idToken == null) {
+                                        print("=== DEBUG GOOGLE LOGIN ====");
+                                        print("ID Token: $idToken");
+                                        print("Access Token: $accessToken");
+                                        print("============================");
+
+                                        // Terkadang di Web, idToken null tapi accessToken ada.
+                                        // Kita ambil mana saja yang tersedia untuk dikirim ke backend.
+                                        final String? tokenToSend =
+                                            idToken ?? accessToken;
+
+                                        if (tokenToSend == null) {
                                           if (!context.mounted) return;
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                'Gagal mendapatkan token Google.',
+                                                'Gagal mendapatkan token dari Google.',
                                               ),
                                               backgroundColor: AppColors.red500,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                           return;
                                         }
 
                                         final success = await _authBloc
-                                            .googleLogin(idToken: idToken);
+                                            .googleLogin(idToken: tokenToSend);
 
                                         if (!context.mounted) return;
 

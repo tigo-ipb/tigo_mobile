@@ -38,8 +38,15 @@ class _SignUpViewState extends State<SignUpView> {
     super.initState();
     _authBloc = AuthBloc();
     _googleSignIn = GoogleSignIn(
-      clientId: kIsWeb ? AppConstants.googleClientId : null,
-      serverClientId: AppConstants.googleClientId,
+      // clientId WAJIB diisi
+      clientId:
+          '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
+
+      // Kuncinya ada di sini: Jika Web, set null. Jika Android/iOS, baru isi dengan Client ID.
+      serverClientId: kIsWeb
+          ? null
+          : '215018091868-g6a15pk85murilhap7mvolj9gksabu2m.apps.googleusercontent.com',
+
       scopes: const ['email', 'profile'],
     );
   }
@@ -276,6 +283,7 @@ class _SignUpViewState extends State<SignUpView> {
                             const SizedBox(height: 24),
 
                             // Google Login Button
+                            // Google Login Button
                             CustomButton(
                               text: 'Lanjutkan dengan Google',
                               size: CustomButtonSize.large,
@@ -289,41 +297,54 @@ class _SignUpViewState extends State<SignUpView> {
                                   ? null
                                   : () async {
                                       try {
+                                        // 1. Putuskan sesi lama secara paksa
+                                        try {
+                                          await _googleSignIn.disconnect();
+                                        } catch (_) {}
+
+                                        // 2. Mulai proses Sign In / Sign Up
                                         final GoogleSignInAccount? googleUser =
                                             await _googleSignIn.signIn();
+
                                         if (googleUser == null) {
-                                          return;
+                                          return; // User membatalkan popup
                                         }
 
                                         final GoogleSignInAuthentication
                                         googleAuth =
                                             await googleUser.authentication;
+
+                                        // 3. Ambil Token (Bisa ID Token, bisa Access Token)
                                         final String? idToken =
                                             googleAuth.idToken;
+                                        final String? accessToken =
+                                            googleAuth.accessToken;
+                                        final String? tokenToSend =
+                                            idToken ?? accessToken;
 
-                                        if (idToken == null) {
+                                        if (tokenToSend == null) {
                                           if (!context.mounted) return;
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                'Gagal mendapatkan token Google.',
+                                                'Gagal mendapatkan token dari Google.',
                                               ),
                                               backgroundColor: AppColors.red500,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
                                             ),
                                           );
                                           return;
                                         }
 
+                                        // 4. Kirim token ke Backend (Fungsi googleLogin di backend akan otomatis mendaftarkan user baru)
                                         final success = await _authBloc
-                                            .googleLogin(idToken: idToken);
+                                            .googleLogin(idToken: tokenToSend);
 
                                         if (!context.mounted) return;
 
                                         if (success) {
+                                          // Jika berhasil dan butuh setup profil
                                           if (_authBloc.status ==
                                               AuthStatus.needsSetup) {
                                             Navigator.pushReplacement(
@@ -338,6 +359,7 @@ class _SignUpViewState extends State<SignUpView> {
                                               ),
                                             );
                                           } else {
+                                            // Jika data sudah lengkap (sudah pernah setup)
                                             if (widget.role == 'organizer') {
                                               Navigator.pushAndRemoveUntil(
                                                 context,
@@ -365,7 +387,7 @@ class _SignUpViewState extends State<SignUpView> {
                                             SnackBar(
                                               content: Text(
                                                 _authBloc.errorMessage ??
-                                                    'Gagal masuk dengan Google.',
+                                                    'Gagal mendaftar dengan Google.',
                                               ),
                                               backgroundColor: AppColors.red500,
                                               behavior:
@@ -380,7 +402,7 @@ class _SignUpViewState extends State<SignUpView> {
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              'Error Google Sign-In: $error',
+                                              'Error Google Sign-Up: $error',
                                             ),
                                             backgroundColor: AppColors.red500,
                                             behavior: SnackBarBehavior.floating,
