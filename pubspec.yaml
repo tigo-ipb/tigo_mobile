@@ -109,5 +109,7 @@ flutter:
 flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
-  image_path: "lib/assets/Icon Tigo.png"
-
+  image_path_android: "lib/assets/Icon Tigo Rounded.png"
+  image_path_ios: "lib/assets/Icon Tigo.png"
+  adaptive_icon_background: "#DDEFFF"
+  adaptive_icon_foreground: "lib/assets/Icon Tigo Foreground.png"

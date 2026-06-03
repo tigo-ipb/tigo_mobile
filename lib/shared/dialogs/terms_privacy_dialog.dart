@@ -68,7 +68,11 @@ class TermsPrivacyDialog extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: Icon(AppIcons.close, color: AppColors.neutral500, size: 20),
+                    icon: Icon(
+                      AppIcons.close,
+                      color: AppColors.neutral500,
+                      size: 20,
+                    ),
                     splashRadius: 20,
                   ),
                 ],
@@ -85,7 +89,10 @@ class TermsPrivacyDialog extends StatelessWidget {
                   children: [
                     Text(
                       'Dengan melanjutkan transaksi, Anda menyetujui hal-hal berikut:',
-                      style: AppTextStyles.medium(14, AppColors.neutral600).copyWith(height: 1.5),
+                      style: AppTextStyles.medium(
+                        14,
+                        AppColors.neutral600,
+                      ).copyWith(height: 1.5),
                     ),
                     const SizedBox(height: 24),
 
@@ -145,23 +152,18 @@ class TermsPrivacyDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required String description,
-  }) {
+  Widget _buildSection({required String title, required String description}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: AppTextStyles.semiBold(14, AppColors.neutral950),
-        ),
+        Text(title, style: AppTextStyles.semiBold(14, AppColors.neutral950)),
         const SizedBox(height: 8),
         Text(
           description,
-          style: AppTextStyles.regular(13, AppColors.neutral600).copyWith(
-            height: 1.5,
-          ),
+          style: AppTextStyles.regular(
+            13,
+            AppColors.neutral600,
+          ).copyWith(height: 1.5),
         ),
       ],
     );
